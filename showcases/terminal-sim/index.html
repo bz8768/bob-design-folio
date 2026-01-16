@@ -1022,11 +1022,11 @@ The terminal displays: "ls -a might help you..."
             if (e.key === 'Enter') {
                 const cmd = commandInput.value;
 
-                // Remove old input line
-                inputLine.remove();
-
-                // Process command
+                // Process command first (while inputLine is still in DOM for insertBefore)
                 processCommand(cmd);
+
+                // Remove old input line after processing
+                inputLine.remove();
 
                 // Create new input line
                 createInputLine();
