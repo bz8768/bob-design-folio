@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Simulator | Bob's Design Folio</title>
+    <meta name="description" content="An interactive Linux terminal simulator with easter eggs">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-terminal: #0d0d0d;
+            --text-primary: #e0e0e0;
+            --text-green: #00ff41;
+            --text-cyan: #00d4ff;
+            --text-yellow: #ffb86c;
+            --text-red: #ff5555;
+            --text-magenta: #ff79c6;
+            --text-muted: #6b6b6b;
+            --border: #2a2a2a;
+            --glow: rgba(0, 255, 65, 0.15);
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Terminal Window */
+        .terminal-window {
+            width: 100%;
+            max-width: 900px;
+            height: 600px;
+            background: var(--bg-terminal);
+            border-radius: 12px;
+            box-shadow:
+                0 25px 80px rgba(0, 0, 0, 0.6),
+                0 0 60px var(--glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Title Bar */
+        .title-bar {
+            height: 40px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .window-btn:hover {
+            filter: brightness(1.2);
+        }
+
+        .btn-close {
+            background: #ff5f57;
+        }
+
+        .btn-minimize {
+            background: #ffbd2e;
+        }
+
+        .btn-maximize {
+            background: #28c940;
+        }
+
+        .title-text {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        /* Terminal Body */
+        .terminal-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .terminal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-body::-webkit-scrollbar-track {
+            background: var(--bg-terminal);
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        /* Output Lines */
+        .output-line {
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 2px;
+        }
+
+        .output-line.command {
+            color: var(--text-green);
+        }
+
+        .output-line.error {
+            color: var(--text-red);
+        }
+
+        .output-line.info {
+            color: var(--text-cyan);
+        }
+
+        .output-line.warning {
+            color: var(--text-yellow);
+        }
+
+        .output-line.highlight {
+            color: var(--text-magenta);
+        }
+
+        /* Input Line */
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .prompt {
+            color: var(--text-green);
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .prompt .user {
+            color: var(--text-cyan);
+        }
+
+        .prompt .at {
+            color: var(--text-muted);
+        }
+
+        .prompt .host {
+            color: var(--text-magenta);
+        }
+
+        .prompt .path {
+            color: var(--text-yellow);
+        }
+
+        .command-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: inherit;
+            caret-color: var(--text-green);
+        }
+
+        /* Blinking cursor effect */
+        .command-input::placeholder {
+            color: transparent;
+        }
+
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 18px;
+            background: var(--text-green);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* ASCII Art styling */
+        .ascii-art {
+            color: var(--text-cyan);
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        /* Directory listing */
+        .dir-entry {
+            display: inline-block;
+            min-width: 180px;
+            padding: 2px 0;
+        }
+
+        .dir-entry.directory {
+            color: var(--text-cyan);
+            font-weight: 500;
+        }
+
+        .dir-entry.file {
+            color: var(--text-primary);
+        }
+
+        .dir-entry.hidden {
+            color: var(--text-muted);
+        }
+
+        .dir-entry.executable {
+            color: var(--text-green);
+        }
+
+        /* Matrix effect overlay */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #matrix-canvas.active {
+            opacity: 1;
+        }
+
+        /* Konami effect */
+        .konami-active .terminal-window {
+            animation: rainbow-glow 2s ease infinite;
+        }
+
+        @keyframes rainbow-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 60px rgba(255, 0, 0, 0.4);
+            }
+
+            16% {
+                box-shadow: 0 0 60px rgba(255, 165, 0, 0.4);
+            }
+
+            33% {
+                box-shadow: 0 0 60px rgba(255, 255, 0, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(0, 255, 0, 0.4);
+            }
+
+            66% {
+                box-shadow: 0 0 60px rgba(0, 0, 255, 0.4);
+            }
+
+            83% {
+                box-shadow: 0 0 60px rgba(128, 0, 128, 0.4);
+            }
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            z-index: 200;
+        }
+
+        .back-btn:hover {
+            color: var(--text-green);
+            border-color: var(--text-green);
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .terminal-window {
+                height: calc(100vh - 2rem);
+                border-radius: 8px;
+            }
+
+            .title-bar {
+                height: 36px;
+            }
+
+            .terminal-body {
+                padding: 12px;
+                font-size: 12px;
+            }
+
+            .back-btn {
+                top: auto;
+                bottom: 1rem;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="../../index.html" class="back-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        Back to Folio
+    </a>
+
+    <canvas id="matrix-canvas"></canvas>
+
+    <div class="terminal-window">
+        <div class="title-bar">
+            <div class="window-controls">
+                <div class="window-btn btn-close" title="Close"></div>
+                <div class="window-btn btn-minimize" title="Minimize"></div>
+                <div class="window-btn btn-maximize" title="Maximize"></div>
+            </div>
+            <div class="title-text">guest@bobs-macbook: ~</div>
+        </div>
+        <div class="terminal-body" id="terminal">
+            <!-- Output will be rendered here -->
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // VIRTUAL FILE SYSTEM
+        // ========================================
+        const fileSystem = {
+            '/': {
+                type: 'dir',
+                children: ['home']
+            },
+            '/home': {
+                type: 'dir',
+                children: ['guest']
+            },
+            '/home/guest': {
+                type: 'dir',
+                children: ['welcome.txt', 'about.txt', 'projects', 'games', '.hidden', '.secrets']
+            },
+            '/home/guest/welcome.txt': {
+                type: 'file',
+                content: `
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║   Welcome to Bob's Terminal Simulator! 🖥️                         ║
+║                                                                   ║
+║   This is an interactive Linux terminal experience.              ║
+║   Type 'help' to see available commands.                         ║
+║                                                                   ║
+║   Pro tip: Try exploring the file system...                      ║
+║            There might be some hidden surprises! 🐣              ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+`
+            },
+            '/home/guest/about.txt': {
+                type: 'file',
+                content: `
+╭─────────────────────────────────────╮
+│  👋 Hi, I'm Bob!                    │
+├─────────────────────────────────────┤
+│                                     │
+│  A developer who loves:             │
+│  • Clean, minimal design            │
+│  • Interactive experiences          │
+│  • Easter eggs (keep looking!)      │
+│  • Terminal aesthetics              │
+│                                     │
+│  Check out my portfolio at:         │
+│  bz8768.github.io/bob-design-folio  │
+│                                     │
+╰─────────────────────────────────────╯
+`
+            },
+            '/home/guest/projects': {
+                type: 'dir',
+                children: ['readme.md', 'secret.txt']
+            },
+            '/home/guest/projects/readme.md': {
+                type: 'file',
+                content: `
+# My Projects 🚀
+
+## Active Projects
+- **Terminal Simulator** - You're using it right now!
+- **Isometric Escape** - 3D puzzle game
+- **HYPER PARALLAX** - Intense scrolling experience
+- **Notion Clone** - Clean documentation UI
+
+## Coming Soon
+- AI-powered code assistant
+- Real-time collaboration tools
+
+---
+PS: Try 'cat secret.txt' in this directory... 👀
+`
+            },
+            '/home/guest/projects/secret.txt': {
+                type: 'file',
+                content: `
+🎉 CONGRATULATIONS! You found Easter Egg #1! 🎉
+
+Here's an ASCII trophy for your curiosity:
+
+       ___________
+      '._==_==_=_.'
+      .-\\:      /-.
+     | (|:.     |) |
+      '-|:.     |-'
+        \\::.    /
+         '::. .'
+           ) (
+         _.' '._
+        '-------'
+        
+You're a true explorer! Try these next:
+• Look in hidden directories (ls -a)
+• Try the 'neofetch' command
+• What happens if you type 'sudo rm -rf /'?
+`
+            },
+            '/home/guest/games': {
+                type: 'dir',
+                children: ['adventure.txt', 'highscores.txt']
+            },
+            '/home/guest/games/adventure.txt': {
+                type: 'file',
+                content: `
+╔════════════════════════════════════════════════╗
+║  🎮 TEXT ADVENTURE PREVIEW 🎮                  ║
+╠════════════════════════════════════════════════╣
+║                                                ║
+║  You stand at the entrance of a dark cave.    ║
+║  A faint glow emanates from deep within.      ║
+║                                                ║
+║  What do you do?                              ║
+║  > ENTER the cave                             ║
+║  > EXAMINE the entrance                       ║
+║  > RUN away                                   ║
+║                                                ║
+║  (Full version coming soon!)                  ║
+║                                                ║
+║  Hint: Try typing 'play adventure' 😉         ║
+╚════════════════════════════════════════════════╝
+`
+            },
+            '/home/guest/games/highscores.txt': {
+                type: 'file',
+                content: `
+🏆 HIGH SCORES 🏆
+─────────────────────
+1. BOB ........... 9999
+2. ALICE ......... 8500
+3. CHARLIE ....... 7200
+4. YOU? .......... ????
+
+Keep exploring to unlock your score!
+`
+            },
+            '/home/guest/.hidden': {
+                type: 'dir',
+                children: ['matrix.txt', '.super_secret']
+            },
+            '/home/guest/.hidden/matrix.txt': {
+                type: 'file',
+                content: `MATRIX_TRIGGER`
+            },
+            '/home/guest/.hidden/.super_secret': {
+                type: 'file',
+                content: `
+🔐 ULTRA SECRET FILE 🔐
+
+You've gone DEEP into the file system!
+
+Fun fact: The Konami Code works here too!
+Try: ↑ ↑ ↓ ↓ ← → ← → B A
+
+Also try these commands:
+• cowsay hello
+• fortune
+• sl
+• 42
+`
+            },
+            '/home/guest/.secrets': {
+                type: 'dir',
+                children: ['konami.txt', 'credits.txt']
+            },
+            '/home/guest/.secrets/konami.txt': {
+                type: 'file',
+                content: `
+🎮 THE KONAMI CODE 🎮
+
+↑ ↑ ↓ ↓ ← → ← → B A
+
+This legendary cheat code was created by Kazuhisa Hashimoto
+for the game Gradius on the NES in 1986.
+
+Try entering it on your keyboard... something might happen! ✨
+`
+            },
+            '/home/guest/.secrets/credits.txt': {
+                type: 'file',
+                content: `
+╔═════════════════════════════════════════╗
+║           🎬 CREDITS 🎬                 ║
+╠═════════════════════════════════════════╣
+║                                         ║
+║  Created by: Bob Zhu                    ║
+║  Built with: HTML, CSS, JavaScript      ║
+║  Inspired by: Classic terminals         ║
+║                                         ║
+║  Special thanks to:                     ║
+║  • You, for exploring!                  ║
+║  • Coffee ☕                            ║
+║  • Late night coding sessions           ║
+║                                         ║
+╚═════════════════════════════════════════╝
+`
+            }
+        };
+
+        // ========================================
+        // TERMINAL STATE
+        // ========================================
+        let currentPath = '/home/guest';
+        let commandHistory = [];
+        let historyIndex = -1;
+        let konamiSequence = [];
+        const KONAMI_CODE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
+        const terminal = document.getElementById('terminal');
+        const titleText = document.querySelector('.title-text');
+
+        // ========================================
+        // HELPER FUNCTIONS
+        // ========================================
+        function resolvePath(path) {
+            if (path.startsWith('/')) return path;
+            if (path === '~') return '/home/guest';
+            if (path.startsWith('~/')) return '/home/guest' + path.slice(1);
+
+            let parts = currentPath.split('/').filter(Boolean);
+            const segments = path.split('/');
+
+            for (const seg of segments) {
+                if (seg === '..') {
+                    parts.pop();
+                } else if (seg !== '.' && seg !== '') {
+                    parts.push(seg);
+                }
+            }
+
+            return '/' + parts.join('/') || '/';
+        }
+
+        function getDisplayPath() {
+            if (currentPath === '/home/guest') return '~';
+            if (currentPath.startsWith('/home/guest/')) return '~' + currentPath.slice(11);
+            return currentPath;
+        }
+
+        function updateTitleBar() {
+            titleText.textContent = `guest@bobs-macbook: ${getDisplayPath()}`;
+        }
+
+        function createOutputLine(text, className = '') {
+            const line = document.createElement('div');
+            line.className = 'output-line' + (className ? ' ' + className : '');
+            line.textContent = text;
+            return line;
+        }
+
+        function createHtmlLine(html, className = '') {
+            const line = document.createElement('div');
+            line.className = 'output-line' + (className ? ' ' + className : '');
+            line.innerHTML = html;
+            return line;
+        }
+
+        function printOutput(text, className = '') {
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                terminal.insertBefore(createOutputLine(line, className), inputLine);
+            });
+        }
+
+        function printHtml(html, className = '') {
+            terminal.insertBefore(createHtmlLine(html, className), inputLine);
+        }
+
+        function scrollToBottom() {
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // ========================================
+        // COMMANDS
+        // ========================================
+        const commands = {
+            help: () => {
+                return `
+Available commands:
+───────────────────────────────────────
+  ls [path]      List directory contents
+  ls -a          Show hidden files too
+  cd <dir>       Change directory
+  cat <file>     Display file contents
+  pwd            Print working directory
+  clear          Clear the terminal
+  echo <text>    Print text
+  whoami         Display current user
+  date           Show current date/time
+  neofetch       System information
+  history        Show command history
+  
+Pro tips:
+  • Use Tab for autocomplete
+  • Use ↑/↓ for command history
+  • Hidden files start with a dot (.)
+  • Try exploring the file system! 🐣
+`;
+            },
+
+            ls: (args) => {
+                const showHidden = args.includes('-a') || args.includes('-la') || args.includes('-al');
+                const pathArg = args.find(a => !a.startsWith('-')) || '.';
+                const targetPath = resolvePath(pathArg);
+                const node = fileSystem[targetPath];
+
+                if (!node) return { text: `ls: cannot access '${pathArg}': No such file or directory`, error: true };
+                if (node.type !== 'dir') return { text: `ls: '${pathArg}': Not a directory`, error: true };
+
+                const entries = node.children
+                    .filter(name => showHidden || !name.startsWith('.'))
+                    .map(name => {
+                        const childPath = targetPath === '/' ? `/${name}` : `${targetPath}/${name}`;
+                        const child = fileSystem[childPath];
+                        const isDir = child && child.type === 'dir';
+                        const isHidden = name.startsWith('.');
+                        let className = isDir ? 'directory' : 'file';
+                        if (isHidden) className += ' hidden';
+                        return `<span class="dir-entry ${className}">${name}${isDir ? '/' : ''}</span>`;
+                    });
+
+                return { html: entries.join('') || '(empty directory)' };
+            },
+
+            cd: (args) => {
+                if (args.length === 0 || args[0] === '~') {
+                    currentPath = '/home/guest';
+                    updateTitleBar();
+                    return null;
+                }
+
+                const targetPath = resolvePath(args[0]);
+                const node = fileSystem[targetPath];
+
+                if (!node) return { text: `cd: no such file or directory: ${args[0]}`, error: true };
+                if (node.type !== 'dir') return { text: `cd: not a directory: ${args[0]}`, error: true };
+
+                currentPath = targetPath;
+                updateTitleBar();
+                return null;
+            },
+
+            cat: (args) => {
+                if (args.length === 0) return { text: 'cat: missing file operand', error: true };
+
+                const targetPath = resolvePath(args[0]);
+                const node = fileSystem[targetPath];
+
+                if (!node) return { text: `cat: ${args[0]}: No such file or directory`, error: true };
+                if (node.type === 'dir') return { text: `cat: ${args[0]}: Is a directory`, error: true };
+
+                // Easter egg: Matrix trigger
+                if (node.content === 'MATRIX_TRIGGER') {
+                    triggerMatrixEffect();
+                    return { text: 'Wake up, Neo... The Matrix has you...\n\nFollow the white rabbit. 🐇', className: 'highlight' };
+                }
+
+                return { text: node.content.trim() };
+            },
+
+            pwd: () => currentPath,
+
+            clear: () => {
+                // Remove all output lines except input
+                const outputs = terminal.querySelectorAll('.output-line');
+                outputs.forEach(el => el.remove());
+                return null;
+            },
+
+            echo: (args) => args.join(' ') || '',
+
+            whoami: () => 'guest',
+
+            date: () => new Date().toString(),
+
+            history: () => {
+                if (commandHistory.length === 0) return 'No commands in history';
+                return commandHistory.map((cmd, i) => `  ${i + 1}  ${cmd}`).join('\n');
+            },
+
+            neofetch: () => {
+                return `
+        .--.         <span class="info">guest</span>@<span class="highlight">bobs-macbook</span>
+       |o_o |        ─────────────────
+       |:_/ |        <span class="info">OS:</span> BobOS 1.0 LTS
+      //   \\ \\       <span class="info">Host:</span> Design Folio
+     (|     | )      <span class="info">Uptime:</span> Always on ☕
+    /'\\_   _/\`\\      <span class="info">Shell:</span> bobsh 1.0
+    \\___)=(___/      <span class="info">Terminal:</span> Terminal Simulator
+                     <span class="info">CPU:</span> Curiosity-Driven Processor
+                     <span class="info">Memory:</span> Unlimited imagination
+                     
+                     <span style="color:#ff5555">███</span><span style="color:#ffb86c">███</span><span style="color:#f1fa8c">███</span><span style="color:#50fa7b">███</span><span style="color:#8be9fd">███</span><span style="color:#bd93f9">███</span><span style="color:#ff79c6">███</span>
+`;
+            },
+
+            cowsay: (args) => {
+                const message = args.join(' ') || 'Moo!';
+                const topLine = ' ' + '_'.repeat(message.length + 2);
+                const botLine = ' ' + '-'.repeat(message.length + 2);
+                return `
+${topLine}
+< ${message} >
+${botLine}
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||
+`;
+            },
+
+            fortune: () => {
+                const fortunes = [
+                    "You will find a hidden easter egg today! 🐣",
+                    "The terminal is mightier than the GUI.",
+                    "In the realm of code, bugs are just features in disguise.",
+                    "Patience, young padawan. Console.log will guide you.",
+                    "The answer is 42. The question is irrelevant.",
+                    "sudo make me a sandwich 🥪",
+                    "There are 10 types of people: those who understand binary and those who don't.",
+                    "Keep calm and clear the terminal."
+                ];
+                return fortunes[Math.floor(Math.random() * fortunes.length)];
+            },
+
+            sudo: (args) => {
+                if (args.join(' ') === 'rm -rf /') {
+                    return {
+                        text: `
+🛑 PERMISSION DENIED 🛑
+
+Nice try! But this terminal values its existence.
+
+    ⠀⠀⠀⠀⣀⣤⣴⣶⣶⣶⣦⣤⣀⠀⠀⠀⠀
+    ⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀
+    ⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀
+    ⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇
+    ⠘⣿⣿⣿⣿⠟⠉⠀⠀⠀⠉⠻⣿⣿⣿⣿⠃
+    ⠀⠹⣿⣿⣿⣦⣤⣀⣀⣤⣴⣾⣿⣿⣿⠏⠀
+    ⠀⠀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⠀
+    ⠀⠀⠀⠀⠀⠉⠛⠻⠿⠿⠛⠉⠀⠀⠀⠀⠀
+
+Error: Self-preservation module activated.
+`, className: 'warning'
+                    };
+                }
+                if (args.join(' ') === 'make me a sandwich') {
+                    return '🥪 Here you go!';
+                }
+                return { text: `sudo: permission denied. This is a simulation!`, error: true };
+            },
+
+            sl: () => {
+                return `
+    ====        ________                ___________
+_D _|  |_______/        \\__I_I_____===__|_________|
+ |(_)---  |   H\\________/ |   |        =|___ ___|  
+ /     |  |   H  |  |     |   |         ||_| |_||  
+|      |  |   H  |__--------------------| [___] |  
+| ________|___H__/__|_____/[][]~\\_______|       |  
+|/ |   |-----------I_____I [][] []  D   |=======|__
+__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__
+ |/-=|___|=    ||    ||    ||    |_____/~\\___/       
+  \\_/      \\O=====O=====O=====O_/      \\_/            
+
+Choo choo! 🚂
+`;
+            },
+
+            '42': () => {
+                return `
+🌌 THE ANSWER TO LIFE, THE UNIVERSE, AND EVERYTHING 🌌
+
+According to the Hitchhiker's Guide to the Galaxy,
+the answer is indeed: 42
+
+But what was the question? 🤔
+
+"Don't Panic!" - Douglas Adams
+`;
+            },
+
+            exit: () => {
+                printOutput('\nLogout\n\n[Process completed]', 'info');
+                setTimeout(() => {
+                    inputLine.style.display = 'none';
+                    printOutput('\nSession ended. Refresh to restart.', 'warning');
+                }, 500);
+                return null;
+            },
+
+            'play': (args) => {
+                if (args[0] === 'adventure') {
+                    return `
+🎮 MINI ADVENTURE 🎮
+━━━━━━━━━━━━━━━━━━━
+
+You enter the dark cave...
+
+*WHOOOOSH*
+
+A gust of wind blows out your torch!
+In the darkness, you hear a whisper:
+
+"The secret lies in the hidden paths..."
+
+You fumble around and find matches.
+Relighting your torch reveals... a terminal!
+
+The terminal displays: "ls -a might help you..."
+
+🎮 GAME OVER - Thanks for playing! 🎮
+`;
+                }
+                return { text: `play: unknown game '${args[0] || ''}'`, error: true };
+            }
+        };
+
+        // ========================================
+        // COMMAND PROCESSOR
+        // ========================================
+        function processCommand(cmdLine) {
+            const trimmed = cmdLine.trim();
+            if (!trimmed) return;
+
+            // Add to history
+            if (trimmed !== commandHistory[commandHistory.length - 1]) {
+                commandHistory.push(trimmed);
+            }
+            historyIndex = commandHistory.length;
+
+            // Print the command
+            printHtml(`<span class="prompt"><span class="user">guest</span><span class="at">@</span><span class="host">bobs-macbook</span>:<span class="path">${getDisplayPath()}</span>$</span> ${escapeHtml(trimmed)}`, 'command');
+
+            // Parse command
+            const parts = trimmed.split(/\s+/);
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+
+            // Special case for '42'
+            if (cmd === '42' || trimmed === '42') {
+                const result = commands['42']();
+                printOutput(result);
+                scrollToBottom();
+                return;
+            }
+
+            // Execute command
+            if (commands[cmd]) {
+                const result = commands[cmd](args);
+
+                if (result === null) {
+                    // Command handled internally (like clear, cd)
+                } else if (typeof result === 'object') {
+                    if (result.html) {
+                        printHtml(result.html, result.className || '');
+                    } else {
+                        printOutput(result.text, result.error ? 'error' : (result.className || ''));
+                    }
+                } else if (typeof result === 'string') {
+                    printHtml(result);
+                }
+            } else {
+                printOutput(`command not found: ${cmd}`, 'error');
+                printOutput(`Type 'help' for available commands.`, 'info');
+            }
+
+            scrollToBottom();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========================================
+        // INPUT HANDLING
+        // ========================================
+        let inputLine;
+        let commandInput;
+
+        function createInputLine() {
+            inputLine = document.createElement('div');
+            inputLine.className = 'input-line';
+            inputLine.innerHTML = `
+                <span class="prompt">
+                    <span class="user">guest</span><span class="at">@</span><span class="host">bobs-macbook</span>:<span class="path">${getDisplayPath()}</span>$
+                </span>
+                <input type="text" class="command-input" autofocus autocomplete="off" spellcheck="false">
+                <span class="cursor-blink"></span>
+            `;
+            terminal.appendChild(inputLine);
+            commandInput = inputLine.querySelector('.command-input');
+
+            commandInput.addEventListener('keydown', handleKeydown);
+            commandInput.addEventListener('input', () => {
+                // Hide blinking cursor when typing
+                const cursor = inputLine.querySelector('.cursor-blink');
+                cursor.style.display = commandInput.value ? 'none' : 'inline-block';
+            });
+        }
+
+        function handleKeydown(e) {
+            // Konami code detection
+            konamiSequence.push(e.key);
+            if (konamiSequence.length > KONAMI_CODE.length) {
+                konamiSequence.shift();
+            }
+            if (JSON.stringify(konamiSequence) === JSON.stringify(KONAMI_CODE)) {
+                triggerKonamiEffect();
+                konamiSequence = [];
+            }
+
+            if (e.key === 'Enter') {
+                const cmd = commandInput.value;
+
+                // Remove old input line
+                inputLine.remove();
+
+                // Process command
+                processCommand(cmd);
+
+                // Create new input line
+                createInputLine();
+                commandInput.focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    commandInput.value = commandHistory[historyIndex] || '';
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    commandInput.value = commandHistory[historyIndex] || '';
+                } else {
+                    historyIndex = commandHistory.length;
+                    commandInput.value = '';
+                }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                handleTabCompletion();
+            } else if (e.key === 'l' && e.ctrlKey) {
+                e.preventDefault();
+                commands.clear();
+            }
+        }
+
+        function handleTabCompletion() {
+            const input = commandInput.value;
+            const parts = input.split(/\s+/);
+
+            if (parts.length <= 1) {
+                // Complete command names
+                const cmdNames = Object.keys(commands);
+                const matches = cmdNames.filter(c => c.startsWith(parts[0]));
+                if (matches.length === 1) {
+                    commandInput.value = matches[0] + ' ';
+                }
+            } else {
+                // Complete file/directory names
+                const partial = parts[parts.length - 1];
+                const pathParts = partial.split('/');
+                const prefix = pathParts.slice(0, -1).join('/');
+                const search = pathParts[pathParts.length - 1];
+
+                const parentPath = prefix ? resolvePath(prefix) : currentPath;
+                const parentNode = fileSystem[parentPath];
+
+                if (parentNode && parentNode.type === 'dir') {
+                    const matches = parentNode.children.filter(c => c.startsWith(search));
+                    if (matches.length === 1) {
+                        const newParts = [...parts];
+                        newParts[newParts.length - 1] = prefix ? `${prefix}/${matches[0]}` : matches[0];
+                        commandInput.value = newParts.join(' ');
+                    }
+                }
+            }
+        }
+
+        // ========================================
+        // EASTER EGG EFFECTS
+        // ========================================
+        function triggerMatrixEffect() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.classList.add('active');
+
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = Array(Math.floor(columns)).fill(1);
+
+            let frameCount = 0;
+            const maxFrames = 300;
+
+            function drawMatrix() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#00ff41';
+                ctx.font = `${fontSize}px JetBrains Mono`;
+
+                for (let i = 0; i < drops.length; i++) {
+                    const char = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+
+                frameCount++;
+                if (frameCount < maxFrames) {
+                    requestAnimationFrame(drawMatrix);
+                } else {
+                    canvas.classList.remove('active');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            drawMatrix();
+        }
+
+        function triggerKonamiEffect() {
+            document.body.classList.add('konami-active');
+            printOutput('\n🎮 KONAMI CODE ACTIVATED! 🎮', 'highlight');
+            printOutput('+30 Lives! Just kidding... but you found an easter egg!\n', 'info');
+
+            setTimeout(() => {
+                document.body.classList.remove('konami-active');
+            }, 5000);
+        }
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        function init() {
+            // Welcome message
+            printOutput(`
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗   ║
+║   ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║████╗  ██║██╔══██╗██║   ║
+║      ██║   █████╗  ██████╔╝██╔████╔██║██║██╔██╗ ██║███████║██║   ║
+║      ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║   ║
+║      ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗
+║      ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+║                                                                  ║
+║   Welcome to Bob's Terminal Simulator v1.0                       ║
+║   Type 'help' for available commands.                            ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+`, 'info');
+
+            createInputLine();
+
+            // Focus input on any click
+            terminal.addEventListener('click', () => {
+                commandInput.focus();
+            });
+
+            // Window button handlers
+            document.querySelector('.btn-close').addEventListener('click', () => {
+                printOutput('\n[Terminal session ended]', 'warning');
+                inputLine.style.display = 'none';
+            });
+
+            document.querySelector('.btn-minimize').addEventListener('click', () => {
+                printOutput('Minimize not supported in browser mode 😄', 'info');
+            });
+
+            document.querySelector('.btn-maximize').addEventListener('click', () => {
+                const win = document.querySelector('.terminal-window');
+                win.style.maxWidth = win.style.maxWidth === 'none' ? '900px' : 'none';
+                win.style.height = win.style.height === '100vh' ? '600px' : '100vh';
+            });
+        }
+
+        // Start when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
