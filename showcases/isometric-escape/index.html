@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Zeta: ISO | Bob's Design Folio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Share Tech Mono', monospace;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* UI LAYER */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hud-panel {
+            background: rgba(0, 20, 30, 0.8);
+            border: 1px solid #0ff;
+            padding: 15px;
+            margin: 20px;
+            color: #0ff;
+            pointer-events: auto;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #message-area {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.5s;
+            text-align: center;
+            max-width: 60%;
+            pointer-events: none;
+        }
+
+        #inventory-dock {
+            align-self: center;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            pointer-events: auto;
+        }
+
+        .inv-cell {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #044;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #044;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .inv-cell.active {
+            border-color: #0ff;
+            color: #0ff;
+            box-shadow: 0 0 10px #0ff;
+        }
+
+        .inv-cell:hover {
+            background: rgba(0, 40, 40, 0.8);
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #0ff;
+            pointer-events: auto;
+        }
+
+        button {
+            background: transparent;
+            color: #0ff;
+            border: 2px solid #0ff;
+            padding: 15px 40px;
+            font-family: inherit;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            font-size: 1rem;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="../../index.html" class="back-btn"><button style="margin:0; font-size: 1rem; padding: 10px 20px;">EXIT
+            SIMULATION</button></a>
+
+    <div id="game-container">
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <h1 style="font-size: 3rem; text-shadow: 0 0 20px #0ff;">PROJECT ZETA: ISOMETRIC</h1>
+            <p>TACTICAL OVERVIEW MODE</p>
+            <p style="color: #666; max-width: 500px; text-align: center;">You are Dr. Aris Thorne. Escape the vessel.
+            </p>
+            <button onclick="startGame()">INITIATE LINK</button>
+        </div>
+
+        <!-- UI -->
+        <div id="ui-layer">
+            <div id="top-bar" class="hud-panel" style="width: 300px;">
+                <span>UNIT STATUS: <span style="color:#0f0">ONLINE</span></span>
+                <br>
+                <span>LOCATION: <span id="loc-text">UNKNOWN</span></span>
+            </div>
+
+            <div id="message-area">Analyzing...</div>
+
+            <div id="inventory-dock">
+                <div class="inv-cell" id="slot-0"></div>
+                <div class="inv-cell" id="slot-1"></div>
+                <div class="inv-cell" id="slot-2"></div>
+                <div class="inv-cell" id="slot-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+
+    <script>
+        // === CORE CONFIG ===
+        const config = {
+            colors: { floor: 0x1a1a24, wall: 0x2d3436, highlight: 0x00d2ff },
+            wallHeight: 3
+        };
+
+        const state = {
+            inventory: [],
+            flags: { hasPower: false },
+        };
+
+        let scene, camera, renderer, raycaster, mouse;
+        let interactables = [];
+        let player;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+
+            const aspect = window.innerWidth / window.innerHeight;
+            const d = 12; // Zoom level
+            camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
+            camera.position.set(20, 20, 20);
+            camera.lookAt(scene.position);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambient);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            dirLight.position.set(10, 20, 5);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            scene.add(dirLight);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            buildLevel();
+
+            window.addEventListener('resize', onResize);
+            window.addEventListener('mousedown', onClick);
+            window.addEventListener('mousemove', onMouseMove);
+
+            animate();
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+        }
+
+        // === LEVEL BUILDER ===
+        function buildLevel() {
+            // -- ROOM 1: CELL --
+            createRoom(0, 0, 8, 8);
+            createWall(4, 0, 8, 'z');
+            createWall(0, 4, 8, 'x');
+            createWall(-4, 0, 8, 'z');
+
+            // Door 1
+            const door1 = createDoor(0, 4, 'x');
+            door1.userData = {
+                type: 'door', locked: true, msg: "LOCKED. System Error.",
+                keyId: 'Plasma Fuse',
+                action: () => {
+                    gsap.to(door1.position, { x: 2.5, duration: 1 });
+                    showMessage("Door Unlocked.");
+                }
+            };
+
+            createBed(-2, -2);
+            createConsole(2, -2, door1);
+            createVent(-3.5, 3.5);
+
+            // -- HALLWAY --
+            createRoom(0, 8, 4, 8);
+            createWall(-2, 8, 8, 'z');
+            createWall(2, 8, 8, 'z');
+
+            // Door 2
+            const door2 = createDoor(0, 12, 'x');
+            door2.userData = {
+                type: 'door', locked: true, msg: "ACCESS DENIED. Commander Keycard required.",
+                keyId: 'Keycard',
+                action: () => {
+                    gsap.to(door2.position, { x: 2.5, duration: 1 });
+                    showMessage("Bridge Access Granted.");
+                }
+            };
+
+            createCrate(1, 8);
+
+            // -- ROOM 3: BRIDGE --
+            createRoom(0, 16, 12, 8);
+            createWall(-6, 16, 8, 'z');
+            createWall(6, 16, 8, 'z');
+
+            createWindow(0, 20, 10);
+            createBridgeConsole(0, 18);
+
+            // PLAYER
+            player = new THREE.Mesh(
+                new THREE.CapsuleGeometry(0.5, 1, 4, 8),
+                new THREE.MeshStandardMaterial({ color: 0x00d2ff, emissive: 0x0044aa, emissiveIntensity: 0.5 })
+            );
+            player.position.set(0, 1, 0);
+            player.castShadow = true;
+            scene.add(player);
+
+            const pLight = new THREE.PointLight(0x00d2ff, 1, 8);
+            pLight.position.set(0, 2, 0);
+            player.add(pLight);
+        }
+
+        // --- HELPERS ---
+        function createRoom(x, z, w, h) {
+            const geo = new THREE.PlaneGeometry(w, h);
+            const mat = new THREE.MeshStandardMaterial({ color: config.colors.floor, roughness: 0.8 });
+            const floor = new THREE.Mesh(geo, mat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.set(x, 0, z);
+            floor.receiveShadow = true;
+            floor.name = "Floor";
+            scene.add(floor);
+
+            const grid = new THREE.GridHelper(w, w, 0x333333, 0x1a1a24);
+            grid.position.set(x, 0.01, z);
+            scene.add(grid);
+        }
+
+        function createWall(x, z, len, axis) {
+            const width = axis === 'x' ? len : 0.5;
+            const depth = axis === 'z' ? len : 0.5;
+            const geo = new THREE.BoxGeometry(width, 3, depth);
+            const mat = new THREE.MeshStandardMaterial({ color: config.colors.wall });
+            const wall = new THREE.Mesh(geo, mat);
+            wall.position.set(x, 1.5, z);
+            wall.castShadow = true; wall.receiveShadow = true;
+            scene.add(wall);
+        }
+
+        function createDoor(x, z, axis) {
+            const geo = new THREE.BoxGeometry(2.5, 3, 0.4);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+            const door = new THREE.Mesh(geo, mat);
+            door.position.set(x, 1.5, z);
+
+            // Frame
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(3, 3.2, 0.6), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            frame.position.set(x, 1.6, z);
+            scene.add(frame);
+
+            addToInteractables(door);
+            scene.add(door);
+            return door;
+        }
+
+        function createBed(x, z) {
+            const grp = new THREE.Group(); grp.position.set(x, 0, z);
+            grp.add(new THREE.Mesh(new THREE.BoxGeometry(2, 0.5, 3), new THREE.MeshStandardMaterial({ color: 0x555566 })).translateX(0).translateY(0.25));
+
+            const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.2, 0.8), new THREE.MeshStandardMaterial({ color: 0x888899 }));
+            pillow.position.set(0, 0.6, -1);
+            pillow.userData = { type: 'search', msg: "Found PLASMA FUSE.", item: 'Plasma Fuse', searched: false };
+            addToInteractables(pillow); grp.add(pillow);
+            scene.add(grp);
+        }
+
+        function createConsole(x, z, doorLink) {
+            const geo = new THREE.BoxGeometry(1, 1.2, 0.8);
+            const machine = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            machine.position.set(x, 0.6, z);
+
+            const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.6), new THREE.MeshBasicMaterial({ color: 0x330000 }));
+            screen.position.set(0, 0.61, 0); screen.rotation.x = -Math.PI / 2; machine.add(screen);
+
+            machine.userData = {
+                type: 'console', msg: "SYSTEM ERROR: Insert Fuse.", needs: 'Plasma Fuse',
+                action: () => {
+                    screen.material.color.setHex(0x00ff00);
+                    showMessage("System Power Restored.");
+                    if (doorLink && doorLink.userData.action) doorLink.userData.action();
+                }
+            };
+            addToInteractables(machine); scene.add(machine);
+        }
+
+        function createCrate(x, z) {
+            const crate = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x443322 }));
+            crate.position.set(x, 0.5, z);
+            crate.userData = { type: 'search', msg: "Found COMMANDER KEYCARD.", item: 'Keycard', searched: false };
+            addToInteractables(crate); scene.add(crate);
+        }
+
+        function createWindow(x, z, w) {
+            const win = new THREE.Mesh(new THREE.PlaneGeometry(w, 3), new THREE.MeshBasicMaterial({ color: 0x00aaff, opacity: 0.2, transparent: true, side: THREE.DoubleSide }));
+            win.position.set(x, 2, z); scene.add(win);
+
+            const stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(Array(300).fill().map(() => (Math.random() - 0.5) * 60), 3)), new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 }));
+            stars.position.set(x, 2, z + 10); scene.add(stars);
+        }
+
+        function createBridgeConsole(x, z) {
+            const con = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 8), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            con.position.set(x, 0.5, z);
+            con.userData = { type: 'console', msg: "HYPER-DRIVE READY. Initiate?", needs: 'none', action: () => winGame() };
+            addToInteractables(con); scene.add(con);
+        }
+
+        function createVent(x, z) {
+            const vent = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.1), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+            vent.position.set(x, 2, -3.9);
+            vent.userData = { msg: "Ventilation shaft. Screwed tight." };
+            addToInteractables(vent); scene.add(vent);
+        }
+
+        function addToInteractables(mesh) { interactables.push(mesh); }
+
+        // --- INTERACTION ---
+        function onClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(interactables);
+            if (intersects.length > 0) {
+                handleInteract(intersects[0].object);
+                return;
+            }
+
+            const floorHits = raycaster.intersectObjects(scene.children.filter(o => o.name === "Floor"));
+            if (floorHits.length > 0) movePlayer(floorHits[0].point);
+        }
+
+        function onMouseMove(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObjects(interactables);
+            document.body.style.cursor = hits.length > 0 ? 'pointer' : 'default';
+        }
+
+        function handleInteract(obj) {
+            const data = obj.userData;
+            if (data.type === 'search') {
+                if (!data.searched) {
+                    showMessage(data.msg);
+                    inventoryAdd(data.item);
+                    data.searched = true;
+                } else showMessage("Empty.");
+            }
+            else if (data.type === 'console' || data.type === 'door') {
+                if (data.needs && data.needs !== 'none') {
+                    if (state.inventory.includes(data.needs)) {
+                        inventoryRemove(data.needs);
+                        if (data.action) data.action();
+                    } else showMessage(data.msg);
+                } else {
+                    // Direct action (e.g. Bridge Console)
+                    if (data.action) data.action();
+                    else showMessage(data.msg);
+                }
+            }
+            else if (data.msg) showMessage(data.msg);
+        }
+
+        function movePlayer(target) {
+            gsap.to(player.position, { x: target.x, z: target.z, duration: 1, ease: "power2.out" });
+        }
+
+        function showMessage(text) {
+            const el = document.getElementById('message-area');
+            el.innerText = text; el.style.opacity = 1;
+            if (el.timeout) clearTimeout(el.timeout);
+            el.timeout = setTimeout(() => el.style.opacity = 0, 3000);
+        }
+
+        function inventoryAdd(item) { state.inventory.push(item); updateInvUI(); }
+        function inventoryRemove(item) { state.inventory = state.inventory.filter(i => i !== item); updateInvUI(); }
+
+        function updateInvUI() {
+            const slots = document.querySelectorAll('.inv-cell');
+            slots.forEach(s => { s.innerText = ""; s.classList.remove('active'); });
+            state.inventory.forEach((item, i) => {
+                if (i < 4) { slots[i].innerText = item[0] + item[1]; slots[i].title = item; slots[i].classList.add('active'); }
+            });
+        }
+
+        function winGame() {
+            showMessage("JUMP INITIATED! Escape Successful.");
+            gsap.to(camera, { zoom: 5, duration: 2, onUpdate: () => camera.updateProjectionMatrix() });
+            setTimeout(() => { alert("SUCCESS!"); location.reload(); }, 2000);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (player) {
+                // Camera Follow
+                const targetX = player.position.x + 20;
+                const targetZ = player.position.z + 20;
+                camera.position.x += (targetX - camera.position.x) * 0.05;
+                camera.position.z += (targetZ - camera.position.z) * 0.05;
+                camera.lookAt(player.position);
+
+                // Update Location Text
+                const z = player.position.z;
+                const locText = document.getElementById('loc-text');
+                if (z < 4) locText.innerText = "BRIG";
+                else if (z < 12) locText.innerText = "HALLWAY";
+                else locText.innerText = "BRIDGE";
+            }
+            renderer.render(scene, camera);
+        }
+
+        function onResize() {
+            const aspect = window.innerWidth / window.innerHeight;
+            const d = 12;
+            camera.left = -d * aspect; camera.right = d * aspect;
+            camera.top = d; camera.bottom = -d;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
