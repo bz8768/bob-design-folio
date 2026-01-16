@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion-Style Design | Bob's Design Folio</title>
+    <meta name="description" content="A clean, minimal design inspired by Notion's aesthetic">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7f6f3;
+            --bg-hover: rgba(55, 53, 47, 0.08);
+            --text-primary: #37352f;
+            --text-secondary: #6b6b6b;
+            --text-muted: #9b9b9b;
+            --accent: #2383e2;
+            --border: rgba(55, 53, 47, 0.09);
+            --code-bg: #f7f6f3;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        /* Layout */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 1rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-header .emoji {
+            font-size: 1.25rem;
+        }
+
+        .sidebar-header .title {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.5rem 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .nav-item.active {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item .emoji {
+            font-size: 1rem;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 4rem 6rem;
+            max-width: 900px;
+        }
+
+        /* Page Header */
+        .page-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            outline: none;
+        }
+
+        .page-description {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* Content Blocks */
+        .block {
+            margin-bottom: 0.5rem;
+            padding: 3px 2px;
+            border-radius: 3px;
+            transition: background 0.15s ease;
+        }
+
+        .block:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Headings */
+        h1.block-heading {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-top: 2rem;
+        }
+
+        h2.block-heading {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+        }
+
+        h3.block-heading {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Paragraph */
+        .block-text {
+            color: var(--text-primary);
+        }
+
+        /* Callout */
+        .block-callout {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        .block-callout .emoji {
+            font-size: 1.25rem;
+        }
+
+        .block-callout .content {
+            flex: 1;
+        }
+
+        /* Toggle */
+        .block-toggle {
+            margin: 0.5rem 0;
+        }
+
+        .toggle-header {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            cursor: pointer;
+            padding: 0.25rem 0;
+        }
+
+        .toggle-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-icon svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .toggle-content {
+            padding-left: 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .block-toggle.open .toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        .block-toggle.open .toggle-content {
+            max-height: 500px;
+        }
+
+        /* Code */
+        .block-code {
+            background: var(--code-bg);
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: 'SFMono-Regular', Menlo, Monaco, monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        /* Inline code */
+        code {
+            background: rgba(135, 131, 120, 0.15);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'SFMono-Regular', Menlo, Monaco, monospace;
+            font-size: 0.875em;
+            color: #eb5757;
+        }
+
+        /* Divider */
+        .block-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1.5rem 0;
+        }
+
+        /* Bullet List */
+        .block-list {
+            padding-left: 1.5rem;
+        }
+
+        .block-list li {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Checkbox/Todo */
+        .block-todo {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.25rem 0;
+        }
+
+        .todo-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--text-muted);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .todo-checkbox:hover {
+            border-color: var(--accent);
+        }
+
+        .todo-checkbox.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .todo-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .todo-text.completed {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        /* Quote */
+        .block-quote {
+            border-left: 3px solid var(--text-primary);
+            padding-left: 1rem;
+            color: var(--text-primary);
+            font-style: italic;
+            margin: 1rem 0;
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .back-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Mobile */
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="emoji">🎨</span>
+                <span class="title">Bob's Workspace</span>
+            </div>
+
+            <nav class="nav-section">
+                <div class="nav-section-title">Favorites</div>
+                <a href="#" class="nav-item active">
+                    <span class="emoji">📄</span>
+                    Design Philosophy
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="emoji">🚀</span>
+                    Projects
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="emoji">💡</span>
+                    Ideas
+                </a>
+            </nav>
+
+            <nav class="nav-section">
+                <div class="nav-section-title">Private</div>
+                <a href="#" class="nav-item">
+                    <span class="emoji">📝</span>
+                    Quick Notes
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="emoji">📚</span>
+                    Reading List
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="emoji">🎯</span>
+                    Goals
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="page-icon">📄</div>
+            <h1 class="page-title">Design Philosophy</h1>
+            <p class="page-description">My approach to creating clean, meaningful digital experiences.</p>
+
+            <div class="block-callout">
+                <span class="emoji">💡</span>
+                <div class="content">
+                    <strong>Core principle:</strong> Good design is invisible. It should feel natural and intuitive,
+                    never getting in the way of the content.
+                </div>
+            </div>
+
+            <h2 class="block-heading">Guiding Principles</h2>
+
+            <div class="block-toggle" onclick="this.classList.toggle('open')">
+                <div class="toggle-header">
+                    <span class="toggle-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                    </span>
+                    <strong>1. Clarity over cleverness</strong>
+                </div>
+                <div class="toggle-content">
+                    <p class="block-text">Users should never have to think about how to use an interface. If something
+                        requires explanation, it's probably too complicated.</p>
+                </div>
+            </div>
+
+            <div class="block-toggle" onclick="this.classList.toggle('open')">
+                <div class="toggle-header">
+                    <span class="toggle-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                    </span>
+                    <strong>2. Embrace whitespace</strong>
+                </div>
+                <div class="toggle-content">
+                    <p class="block-text">Empty space isn't wasted space. It gives elements room to breathe and helps
+                        users focus on what matters.</p>
+                </div>
+            </div>
+
+            <div class="block-toggle open" onclick="this.classList.toggle('open')">
+                <div class="toggle-header">
+                    <span class="toggle-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg>
+                    </span>
+                    <strong>3. Typography is everything</strong>
+                </div>
+                <div class="toggle-content">
+                    <p class="block-text">90% of web design is typography. Choose fonts carefully, set proper line
+                        heights, and respect the vertical rhythm.</p>
+                </div>
+            </div>
+
+            <div class="block-divider"></div>
+
+            <h2 class="block-heading">Current Focus</h2>
+
+            <div class="block-todo">
+                <div class="todo-checkbox checked"
+                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                </div>
+                <span class="todo-text completed">Master CSS Grid and Flexbox</span>
+            </div>
+            <div class="block-todo">
+                <div class="todo-checkbox checked"
+                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                </div>
+                <span class="todo-text completed">Learn animation principles</span>
+            </div>
+            <div class="block-todo">
+                <div class="todo-checkbox"
+                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                </div>
+                <span class="todo-text">Explore 3D web experiences</span>
+            </div>
+            <div class="block-todo">
+                <div class="todo-checkbox"
+                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                </div>
+                <span class="todo-text">Study micro-interactions</span>
+            </div>
+
+            <div class="block-divider"></div>
+
+            <h2 class="block-heading">Favorite Quote</h2>
+
+            <blockquote class="block-quote">
+                "Design is not just what it looks like and feels like. Design is how it works."
+                <br>— Steve Jobs
+            </blockquote>
+
+            <div class="block-divider"></div>
+
+            <h3 class="block-heading">Tech Stack</h3>
+
+            <p class="block-text">
+                I primarily work with <code>HTML</code>, <code>CSS</code>, and <code>JavaScript</code>.
+                For frameworks, I prefer <code>React</code> or <code>Vue</code> depending on the project requirements.
+            </p>
+
+            <div class="block-code">
+                <pre>const designPrinciples = {
+  clarity: true,
+  whitespace: 'generous',
+  typography: 'intentional',
+  animations: 'subtle'
+};</pre>
+            </div>
+        </main>
+    </div>
+
+    <a href="../../index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Portfolio
+    </a>
+</body>
+
+</html>
