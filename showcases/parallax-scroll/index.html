@@ -5,14 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parallax Journey | Bob's Design Folio</title>
-    <meta name="description" content="An immersive parallax scrolling experience with layered depth effects">
+    <meta name="description" content="An epic parallax scrolling journey through multiple worlds and dimensions">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
         :root {
             --color-dark: #0a0a0f;
             --color-accent: #00d2ff;
             --color-accent-secondary: #7c3aed;
+            --color-gold: #fbbf24;
+            --color-rose: #f43f5e;
+            --color-emerald: #10b981;
         }
 
         * {
@@ -30,6 +33,67 @@
             background: var(--color-dark);
             color: white;
             overflow-x: hidden;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-accent), var(--color-accent-secondary), var(--color-rose));
+            z-index: 1001;
+            transition: width 0.1s ease-out;
+        }
+
+        /* Chapter Indicator */
+        .chapter-indicator {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .chapter-dot {
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .chapter-dot:hover {
+            border-color: var(--color-accent);
+        }
+
+        .chapter-dot.active {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+
+        .chapter-dot::after {
+            content: attr(data-chapter);
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .chapter-dot:hover::after {
+            opacity: 1;
         }
 
         /* Back Button */
@@ -74,28 +138,92 @@
             overflow: hidden;
         }
 
-        /* Layers */
         .layer {
             position: absolute;
             width: 100%;
             height: 100%;
             transition: transform 0.1s ease-out;
+            will-change: transform;
         }
 
-        /* Hero Section */
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+            max-width: 800px;
+        }
+
+        .content h2 {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .content p {
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.8;
+        }
+
+        .chapter-label {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 2rem;
+        }
+
+        /* ============================================
+           CHAPTER 1: THE BEGINNING - STARFIELD
+           ============================================ */
         .hero {
             background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
+            min-height: 100vh;
         }
 
-        .hero .layer-stars {
+        .hero .layer-stars-far {
             background-image:
-                radial-gradient(2px 2px at 20px 30px, white, transparent),
-                radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
-                radial-gradient(1px 1px at 90px 40px, white, transparent),
-                radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
-                radial-gradient(1px 1px at 160px 120px, white, transparent);
+                radial-gradient(1px 1px at 10% 20%, white, transparent),
+                radial-gradient(1px 1px at 20% 50%, rgba(255, 255, 255, 0.8), transparent),
+                radial-gradient(1px 1px at 30% 30%, white, transparent),
+                radial-gradient(1px 1px at 40% 70%, rgba(255, 255, 255, 0.6), transparent),
+                radial-gradient(1px 1px at 50% 40%, white, transparent),
+                radial-gradient(1px 1px at 60% 80%, rgba(255, 255, 255, 0.7), transparent),
+                radial-gradient(1px 1px at 70% 25%, white, transparent),
+                radial-gradient(1px 1px at 80% 60%, rgba(255, 255, 255, 0.5), transparent),
+                radial-gradient(1px 1px at 90% 35%, white, transparent);
+            background-size: 250px 250px;
+        }
+
+        .hero .layer-stars-mid {
+            background-image:
+                radial-gradient(2px 2px at 15% 45%, white, transparent),
+                radial-gradient(2px 2px at 35% 15%, rgba(255, 255, 255, 0.9), transparent),
+                radial-gradient(2px 2px at 55% 65%, white, transparent),
+                radial-gradient(2px 2px at 75% 35%, rgba(255, 255, 255, 0.8), transparent),
+                radial-gradient(2px 2px at 95% 85%, white, transparent);
             background-size: 200px 200px;
-            animation: twinkle 5s ease-in-out infinite;
+            animation: twinkle 4s ease-in-out infinite;
+        }
+
+        .hero .layer-stars-close {
+            background-image:
+                radial-gradient(3px 3px at 25% 25%, rgba(0, 210, 255, 0.8), transparent),
+                radial-gradient(3px 3px at 75% 75%, rgba(124, 58, 237, 0.8), transparent);
+            background-size: 300px 300px;
+            animation: twinkle 3s ease-in-out infinite reverse;
+        }
+
+        .hero .layer-nebula {
+            background: radial-gradient(ellipse at 30% 40%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, rgba(0, 210, 255, 0.1) 0%, transparent 50%);
         }
 
         @keyframes twinkle {
@@ -106,45 +234,14 @@
             }
 
             50% {
-                opacity: 0.5;
+                opacity: 0.3;
             }
         }
 
-        .hero .layer-grid {
-            background:
-                linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: perspective(500px) rotateX(60deg);
-            transform-origin: center 80%;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            max-width: 800px;
-            padding: 2rem;
-        }
-
-        .hero-badge {
-            display: inline-block;
-            padding: 0.5rem 1.5rem;
-            background: rgba(0, 210, 255, 0.1);
-            border: 1px solid rgba(0, 210, 255, 0.3);
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            color: var(--color-accent);
-            margin-bottom: 2rem;
-        }
-
         .hero h1 {
-            font-size: clamp(3rem, 10vw, 6rem);
+            font-size: clamp(3rem, 12vw, 8rem);
             font-weight: 700;
-            line-height: 1.1;
+            line-height: 1;
             margin-bottom: 1.5rem;
             background: linear-gradient(135deg, #ffffff 0%, #00d2ff 50%, #7c3aed 100%);
             -webkit-background-clip: text;
@@ -153,57 +250,56 @@
         }
 
         .hero p {
-            font-size: 1.25rem;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 3rem;
         }
 
-        .scroll-indicator {
-            position: absolute;
-            bottom: 3rem;
-            left: 50%;
-            transform: translateX(-50%);
+        .scroll-cta {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
+            gap: 1rem;
             animation: bounce 2s ease-in-out infinite;
         }
 
-        .scroll-indicator .mouse {
-            width: 24px;
-            height: 38px;
+        .scroll-cta .mouse {
+            width: 26px;
+            height: 42px;
             border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 12px;
+            border-radius: 13px;
             position: relative;
         }
 
-        .scroll-indicator .mouse::before {
+        .scroll-cta .mouse::before {
             content: '';
             position: absolute;
             top: 8px;
             left: 50%;
             transform: translateX(-50%);
             width: 4px;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.4);
+            height: 10px;
+            background: rgba(255, 255, 255, 0.6);
             border-radius: 2px;
             animation: scrollWheel 2s ease-in-out infinite;
+        }
+
+        .scroll-cta span {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.4);
         }
 
         @keyframes bounce {
 
             0%,
             100% {
-                transform: translateX(-50%) translateY(0);
+                transform: translateY(0);
             }
 
             50% {
-                transform: translateX(-50%) translateY(10px);
+                transform: translateY(10px);
             }
         }
 
@@ -216,228 +312,823 @@
             }
 
             50% {
-                opacity: 0.3;
-                top: 18px;
+                opacity: 0.2;
+                top: 20px;
             }
         }
 
-        /* Mountain Section */
-        .mountains {
-            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        /* ============================================
+           CHAPTER 2: DESCENT - CLOUDS & SKY
+           ============================================ */
+        .clouds {
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d3a5f 30%, #4a6fa5 60%, #87CEEB 100%);
+            min-height: 150vh;
         }
 
-        .mountains .layer-back {
+        .clouds .layer-clouds-back {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20'%3E%3Cellipse cx='50' cy='10' rx='50' ry='10' fill='rgba(255,255,255,0.1)'/%3E%3C/svg%3E") repeat;
+            background-size: 400px 80px;
+            opacity: 0.5;
+        }
+
+        .clouds .layer-clouds-mid {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30'%3E%3Cellipse cx='50' cy='15' rx='45' ry='12' fill='rgba(255,255,255,0.2)'/%3E%3C/svg%3E") repeat;
+            background-size: 300px 100px;
+            opacity: 0.7;
+        }
+
+        .clouds .layer-clouds-front {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cellipse cx='50' cy='20' rx='40' ry='15' fill='rgba(255,255,255,0.3)'/%3E%3C/svg%3E") repeat;
+            background-size: 250px 120px;
+        }
+
+        .clouds .layer-sun {
+            top: 20%;
+            left: 70%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 220, 100, 0.8) 0%, rgba(255, 180, 50, 0.4) 40%, transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 100px 50px rgba(255, 200, 100, 0.3);
+        }
+
+        .clouds .content h2 {
+            color: #1a1a2e;
+        }
+
+        .clouds .content p {
+            color: rgba(26, 26, 46, 0.7);
+        }
+
+        .clouds .chapter-label {
+            background: rgba(26, 26, 46, 0.1);
+            border-color: rgba(26, 26, 46, 0.2);
+            color: #1a1a2e;
+        }
+
+        /* ============================================
+           CHAPTER 3: THE MOUNTAINS
+           ============================================ */
+        .mountains {
+            background: linear-gradient(180deg, #87CEEB 0%, #E0B0FF 30%, #ff7e5f 60%, #1a1a2e 100%);
+            min-height: 200vh;
+        }
+
+        .mountains .layer-mountain-far {
+            bottom: 0;
+            height: 80%;
+            background: linear-gradient(to top, #2d3748 0%, #2d3748 60%, transparent 100%);
+            clip-path: polygon(0 100%, 0 60%, 10% 45%, 20% 55%, 30% 35%, 45% 50%, 55% 30%, 65% 45%, 80% 25%, 90% 40%, 100% 20%, 100% 100%);
+            opacity: 0.4;
+        }
+
+        .mountains .layer-mountain-mid {
+            bottom: 0;
+            height: 70%;
+            background: linear-gradient(to top, #4a5568 0%, #4a5568 50%, transparent 100%);
+            clip-path: polygon(0 100%, 0 70%, 15% 50%, 25% 65%, 40% 40%, 50% 55%, 60% 35%, 75% 50%, 85% 30%, 100% 45%, 100% 100%);
+            opacity: 0.6;
+        }
+
+        .mountains .layer-mountain-close {
             bottom: 0;
             height: 60%;
-            background: linear-gradient(to bottom right, #1e3a5f 0%, transparent 50%),
-                linear-gradient(to bottom left, #2d4a6f 0%, transparent 50%);
-            clip-path: polygon(0 100%, 20% 40%, 40% 60%, 60% 30%, 80% 50%, 100% 20%, 100% 100%);
+            background: linear-gradient(to top, #1a202c 0%, #2d3748 80%, transparent 100%);
+            clip-path: polygon(0 100%, 0 80%, 10% 60%, 20% 75%, 35% 45%, 50% 65%, 65% 40%, 80% 60%, 90% 45%, 100% 55%, 100% 100%);
         }
 
-        .mountains .layer-mid {
+        .mountains .layer-birds {
+            font-size: 2rem;
+            color: rgba(0, 0, 0, 0.3);
+        }
+
+        .bird {
+            position: absolute;
+            animation: fly 20s linear infinite;
+        }
+
+        .bird:nth-child(1) {
+            top: 20%;
+            left: -50px;
+            animation-delay: 0s;
+        }
+
+        .bird:nth-child(2) {
+            top: 30%;
+            left: -50px;
+            animation-delay: 5s;
+        }
+
+        .bird:nth-child(3) {
+            top: 15%;
+            left: -50px;
+            animation-delay: 10s;
+        }
+
+        @keyframes fly {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(calc(100vw + 100px));
+            }
+        }
+
+        /* ============================================
+           CHAPTER 4: THE FOREST
+           ============================================ */
+        .forest {
+            background: linear-gradient(180deg, #1a1a2e 0%, #0d1f0d 30%, #0a1a0a 100%);
+            min-height: 180vh;
+        }
+
+        .forest .layer-trees-far {
             bottom: 0;
-            height: 50%;
-            background: linear-gradient(to bottom right, #16213e 0%, #1a3a5c 100%);
-            clip-path: polygon(0 60%, 15% 40%, 35% 70%, 55% 35%, 75% 55%, 100% 40%, 100% 100%, 0 100%);
+            height: 90%;
+            background: repeating-linear-gradient(90deg,
+                    transparent 0px,
+                    transparent 30px,
+                    #0d2818 30px,
+                    #0d2818 32px,
+                    transparent 32px,
+                    transparent 50px);
+            clip-path: polygon(0 100%, 0 30%, 5% 10%, 10% 30%, 15% 15%, 20% 35%, 25% 8%, 30% 25%,
+                    35% 12%, 40% 30%, 45% 5%, 50% 28%, 55% 10%, 60% 32%, 65% 15%, 70% 30%,
+                    75% 8%, 80% 25%, 85% 18%, 90% 35%, 95% 12%, 100% 28%, 100% 100%);
+            opacity: 0.3;
         }
 
-        .mountains .layer-front {
+        .forest .layer-trees-mid {
+            bottom: 0;
+            height: 80%;
+            background: repeating-linear-gradient(90deg,
+                    transparent 0px,
+                    transparent 20px,
+                    #0a3d1a 20px,
+                    #0a3d1a 24px,
+                    transparent 24px,
+                    transparent 40px);
+            clip-path: polygon(0 100%, 0 40%, 3% 20%, 8% 35%, 12% 15%, 18% 38%, 22% 12%, 28% 30%,
+                    32% 18%, 38% 40%, 42% 10%, 48% 32%, 52% 15%, 58% 35%, 62% 8%, 68% 28%,
+                    72% 20%, 78% 38%, 82% 12%, 88% 30%, 92% 22%, 97% 35%, 100% 18%, 100% 100%);
+            opacity: 0.5;
+        }
+
+        .forest .layer-trees-close {
+            bottom: 0;
+            height: 70%;
+            background: repeating-linear-gradient(90deg,
+                    transparent 0px,
+                    transparent 15px,
+                    #052e0d 15px,
+                    #052e0d 20px,
+                    transparent 20px,
+                    transparent 35px);
+            clip-path: polygon(0 100%, 0 50%, 4% 25%, 10% 45%, 15% 20%, 22% 42%, 26% 15%, 32% 38%,
+                    36% 22%, 42% 45%, 46% 12%, 52% 35%, 56% 18%, 62% 40%, 66% 10%, 72% 32%,
+                    76% 25%, 82% 42%, 86% 15%, 92% 38%, 96% 28%, 100% 42%, 100% 100%);
+        }
+
+        .forest .layer-mist {
             bottom: 0;
             height: 40%;
-            background: linear-gradient(to bottom, #0d1b2a 0%, #0a0a0f 100%);
-            clip-path: polygon(0 70%, 25% 50%, 50% 75%, 75% 45%, 100% 65%, 100% 100%, 0 100%);
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
         }
 
-        .mountains-content {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .mountains h2 {
-            font-size: clamp(2rem, 6vw, 4rem);
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .mountains p {
-            font-size: 1.125rem;
-            color: rgba(255, 255, 255, 0.6);
-            max-width: 500px;
-        }
-
-        /* Abstract Section */
-        .abstract {
-            background: linear-gradient(180deg, #0f3460 0%, #1a0a2e 50%, #0a0a0f 100%);
-        }
-
-        .abstract .floating-shapes {
+        .forest .layer-fireflies {
             position: absolute;
             width: 100%;
             height: 100%;
         }
 
-        .abstract .shape {
+        .firefly {
             position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #fef08a;
             border-radius: 50%;
-            opacity: 0.3;
+            box-shadow: 0 0 10px 5px rgba(254, 240, 138, 0.5);
+            animation: firefly 8s ease-in-out infinite;
         }
 
-        .abstract .shape-1 {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-secondary) 100%);
-            top: 10%;
+        .firefly:nth-child(1) {
+            top: 40%;
             left: 10%;
-            animation: float1 8s ease-in-out infinite;
+            animation-delay: 0s;
         }
 
-        .abstract .shape-2 {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, var(--color-accent-secondary) 0%, #ec4899 100%);
+        .firefly:nth-child(2) {
+            top: 60%;
+            left: 25%;
+            animation-delay: 1s;
+        }
+
+        .firefly:nth-child(3) {
             top: 50%;
-            right: 15%;
-            animation: float2 10s ease-in-out infinite;
+            left: 40%;
+            animation-delay: 2s;
         }
 
-        .abstract .shape-3 {
-            width: 150px;
-            height: 150px;
-            background: var(--color-accent);
-            bottom: 20%;
-            left: 20%;
-            animation: float3 7s ease-in-out infinite;
+        .firefly:nth-child(4) {
+            top: 70%;
+            left: 55%;
+            animation-delay: 3s;
         }
 
-        @keyframes float1 {
+        .firefly:nth-child(5) {
+            top: 45%;
+            left: 70%;
+            animation-delay: 4s;
+        }
+
+        .firefly:nth-child(6) {
+            top: 65%;
+            left: 85%;
+            animation-delay: 5s;
+        }
+
+        .firefly:nth-child(7) {
+            top: 55%;
+            left: 15%;
+            animation-delay: 6s;
+        }
+
+        .firefly:nth-child(8) {
+            top: 75%;
+            left: 80%;
+            animation-delay: 7s;
+        }
+
+        @keyframes firefly {
 
             0%,
             100% {
-                transform: translate(0, 0) rotate(0deg);
-            }
-
-            50% {
-                transform: translate(30px, -30px) rotate(10deg);
-            }
-        }
-
-        @keyframes float2 {
-
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg);
-            }
-
-            50% {
-                transform: translate(-20px, 20px) rotate(-10deg);
-            }
-        }
-
-        @keyframes float3 {
-
-            0%,
-            100% {
+                opacity: 0.2;
                 transform: translate(0, 0);
             }
 
+            25% {
+                opacity: 1;
+                transform: translate(10px, -15px);
+            }
+
             50% {
-                transform: translate(20px, -40px);
+                opacity: 0.5;
+                transform: translate(-5px, -25px);
+            }
+
+            75% {
+                opacity: 1;
+                transform: translate(15px, -10px);
             }
         }
 
-        .abstract-content {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            padding: 2rem;
+        /* ============================================
+           CHAPTER 5: THE OCEAN
+           ============================================ */
+        .ocean {
+            background: linear-gradient(180deg, #0a1a0a 0%, #0c2340 20%, #1e3a5f 50%, #0a1628 100%);
+            min-height: 200vh;
         }
 
-        .abstract h2 {
-            font-size: clamp(2rem, 6vw, 4rem);
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .abstract p {
-            font-size: 1.125rem;
-            color: rgba(255, 255, 255, 0.6);
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        /* Final Section */
-        .final {
-            background: var(--color-dark);
-            position: relative;
-        }
-
-        .final::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 1px;
+        .ocean .layer-waves-back {
+            bottom: 0;
             height: 30%;
-            background: linear-gradient(to bottom, var(--color-accent), transparent);
+            background: linear-gradient(to top, #0c4a6e 0%, transparent 100%);
+            animation: wave 8s ease-in-out infinite;
         }
 
-        .final-content {
-            text-align: center;
-            padding: 2rem;
+        .ocean .layer-waves-mid {
+            bottom: 0;
+            height: 25%;
+            background: linear-gradient(to top, #0369a1 0%, transparent 100%);
+            animation: wave 6s ease-in-out infinite reverse;
         }
 
-        .final h2 {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #ffffff 0%, var(--color-accent) 100%);
+        .ocean .layer-waves-front {
+            bottom: 0;
+            height: 20%;
+            background: linear-gradient(to top, #0284c7 0%, transparent 100%);
+            animation: wave 4s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                transform: translateX(0) scaleY(1);
+            }
+
+            50% {
+                transform: translateX(-20px) scaleY(1.1);
+            }
+        }
+
+        .ocean .layer-fish {
+            font-size: 1.5rem;
+        }
+
+        .fish {
+            position: absolute;
+            animation: swim 15s linear infinite;
+        }
+
+        .fish:nth-child(1) {
+            top: 60%;
+            right: -50px;
+            animation-duration: 12s;
+        }
+
+        .fish:nth-child(2) {
+            top: 70%;
+            right: -50px;
+            animation-duration: 18s;
+            animation-delay: 3s;
+        }
+
+        .fish:nth-child(3) {
+            top: 80%;
+            right: -50px;
+            animation-duration: 15s;
+            animation-delay: 6s;
+        }
+
+        @keyframes swim {
+            from {
+                transform: translateX(0) scaleX(-1);
+            }
+
+            to {
+                transform: translateX(calc(-100vw - 100px)) scaleX(-1);
+            }
+        }
+
+        .ocean .layer-bubbles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bubble {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: rise 10s ease-in infinite;
+        }
+
+        .bubble:nth-child(1) {
+            width: 20px;
+            height: 20px;
+            left: 10%;
+            animation-duration: 8s;
+        }
+
+        .bubble:nth-child(2) {
+            width: 15px;
+            height: 15px;
+            left: 30%;
+            animation-duration: 12s;
+            animation-delay: 2s;
+        }
+
+        .bubble:nth-child(3) {
+            width: 25px;
+            height: 25px;
+            left: 50%;
+            animation-duration: 10s;
+            animation-delay: 4s;
+        }
+
+        .bubble:nth-child(4) {
+            width: 18px;
+            height: 18px;
+            left: 70%;
+            animation-duration: 9s;
+            animation-delay: 1s;
+        }
+
+        .bubble:nth-child(5) {
+            width: 22px;
+            height: 22px;
+            left: 85%;
+            animation-duration: 11s;
+            animation-delay: 3s;
+        }
+
+        @keyframes rise {
+            from {
+                bottom: -50px;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.6;
+            }
+
+            90% {
+                opacity: 0.3;
+            }
+
+            to {
+                bottom: 100%;
+                opacity: 0;
+            }
+        }
+
+        /* ============================================
+           CHAPTER 6: THE DEEP
+           ============================================ */
+        .deep {
+            background: linear-gradient(180deg, #0a1628 0%, #020617 50%, #000000 100%);
+            min-height: 150vh;
+        }
+
+        .deep .layer-bioluminescence {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+
+        .glow-orb:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            left: 15%;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.3) 0%, transparent 70%);
+            animation-delay: 0s;
+        }
+
+        .glow-orb:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 40%;
+            left: 60%;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
+            animation-delay: 1s;
+        }
+
+        .glow-orb:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            top: 60%;
+            left: 30%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+            animation-delay: 2s;
+        }
+
+        .glow-orb:nth-child(4) {
+            width: 120px;
+            height: 120px;
+            top: 75%;
+            left: 75%;
+            background: radial-gradient(circle, rgba(244, 63, 94, 0.3) 0%, transparent 70%);
+            animation-delay: 3s;
+        }
+
+        .glow-orb:nth-child(5) {
+            width: 60px;
+            height: 60px;
+            top: 30%;
+            left: 80%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 70%);
+            animation-delay: 1.5s;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .deep .content h2 {
+            background: linear-gradient(135deg, #00d2ff 0%, #7c3aed 50%, #f43f5e 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .final p {
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 2rem;
+        /* ============================================
+           CHAPTER 7: ABSTRACT DIMENSIONS
+           ============================================ */
+        .abstract {
+            background: linear-gradient(180deg, #000000 0%, #1a0a2e 50%, #2a0a3e 100%);
+            min-height: 180vh;
         }
 
-        .final a {
+        .abstract .layer-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .abstract-shape {
+            position: absolute;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: morph 15s ease-in-out infinite, float-around 20s ease-in-out infinite;
+        }
+
+        .abstract-shape:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 10%;
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+            animation-delay: 0s;
+        }
+
+        .abstract-shape:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            left: 60%;
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%);
+            animation-delay: -5s;
+        }
+
+        .abstract-shape:nth-child(3) {
+            width: 250px;
+            height: 250px;
+            top: 70%;
+            left: 20%;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(0, 210, 255, 0.2) 100%);
+            animation-delay: -10s;
+        }
+
+        .abstract-shape:nth-child(4) {
+            width: 180px;
+            height: 180px;
+            top: 25%;
+            left: 75%;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(244, 63, 94, 0.2) 100%);
+            animation-delay: -7s;
+        }
+
+        @keyframes morph {
+
+            0%,
+            100% {
+                border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            }
+
+            25% {
+                border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%;
+            }
+
+            50% {
+                border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%;
+            }
+
+            75% {
+                border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%;
+            }
+        }
+
+        @keyframes float-around {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            25% {
+                transform: translate(30px, -50px) rotate(90deg);
+            }
+
+            50% {
+                transform: translate(-20px, 30px) rotate(180deg);
+            }
+
+            75% {
+                transform: translate(40px, 20px) rotate(270deg);
+            }
+        }
+
+        .abstract .layer-grid {
+            background:
+                linear-gradient(rgba(124, 58, 237, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124, 58, 237, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: center 120%;
+            height: 200%;
+        }
+
+        /* ============================================
+           CHAPTER 8: THE COSMOS
+           ============================================ */
+        .cosmos {
+            background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a0f 50%, #000000 100%);
+            min-height: 200vh;
+        }
+
+        .cosmos .layer-galaxy {
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(124, 58, 237, 0.15) 0%, transparent 40%),
+                radial-gradient(ellipse at 70% 70%, rgba(0, 210, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(ellipse at 50% 50%, rgba(244, 63, 94, 0.08) 0%, transparent 60%);
+            animation: galaxy-rotate 60s linear infinite;
+        }
+
+        @keyframes galaxy-rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .cosmos .layer-planets {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: inset -20px -10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .planet-1 {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 20%;
+            background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+            animation: orbit 30s linear infinite;
+        }
+
+        .planet-2 {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            left: 70%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            animation: orbit 45s linear infinite reverse;
+        }
+
+        .planet-2::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -20%;
+            width: 140%;
+            height: 20px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: translateY(-50%) rotate(-15deg);
+            border-radius: 50%;
+        }
+
+        .planet-3 {
+            width: 50px;
+            height: 50px;
+            top: 40%;
+            left: 85%;
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            animation: orbit 20s linear infinite;
+        }
+
+        @keyframes orbit {
+            from {
+                transform: rotate(0deg) translateX(10px) rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg) translateX(10px) rotate(-360deg);
+            }
+        }
+
+        /* ============================================
+           CHAPTER 9: FINALE - RETURN HOME
+           ============================================ */
+        .finale {
+            background: linear-gradient(180deg, #000000 0%, #0a0a0f 30%, #1a1a2e 70%, var(--color-dark) 100%);
+            min-height: 100vh;
+        }
+
+        .finale::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 30%;
+            background: linear-gradient(to bottom, var(--color-accent), transparent);
+        }
+
+        .finale h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 400;
+            background: linear-gradient(135deg, #ffffff 0%, var(--color-accent) 50%, var(--color-accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .finale p {
+            margin-bottom: 3rem;
+            font-size: 1.25rem;
+        }
+
+        .finale .cta-btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 1rem 2rem;
+            gap: 0.75rem;
+            padding: 1.25rem 2.5rem;
             background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-secondary) 100%);
             color: var(--color-dark);
             text-decoration: none;
             font-weight: 600;
+            font-size: 1rem;
             border-radius: 100px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
         }
 
-        .final a:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 40px -10px rgba(0, 210, 255, 0.5);
+        .finale .cta-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px -15px rgba(0, 210, 255, 0.5);
         }
 
-        /* Progress Bar */
-        .progress-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 0%;
-            height: 3px;
-            background: linear-gradient(90deg, var(--color-accent), var(--color-accent-secondary));
-            z-index: 1001;
-            transition: width 0.1s ease-out;
+        .finale .cta-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ============================================
+           MOBILE RESPONSIVENESS
+           ============================================ */
+        @media (max-width: 768px) {
+            .chapter-indicator {
+                display: none;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .content h2 {
+                font-size: clamp(1.5rem, 8vw, 3rem);
+            }
+
+            .hero h1 {
+                font-size: clamp(2rem, 15vw, 5rem);
+            }
+
+            .abstract-shape {
+                transform: scale(0.6);
+            }
+
+            .planet-1 {
+                width: 50px;
+                height: 50px;
+            }
+
+            .planet-2 {
+                width: 80px;
+                height: 80px;
+            }
+
+            .planet-3 {
+                width: 35px;
+                height: 35px;
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="progress-bar" id="progressBar"></div>
+
+    <div class="chapter-indicator" id="chapterIndicator">
+        <div class="chapter-dot active" data-chapter="The Beginning" data-section="hero"></div>
+        <div class="chapter-dot" data-chapter="The Descent" data-section="clouds"></div>
+        <div class="chapter-dot" data-chapter="The Mountains" data-section="mountains"></div>
+        <div class="chapter-dot" data-chapter="The Forest" data-section="forest"></div>
+        <div class="chapter-dot" data-chapter="The Ocean" data-section="ocean"></div>
+        <div class="chapter-dot" data-chapter="The Deep" data-section="deep"></div>
+        <div class="chapter-dot" data-chapter="Abstract Dimensions" data-section="abstract"></div>
+        <div class="chapter-dot" data-chapter="The Cosmos" data-section="cosmos"></div>
+        <div class="chapter-dot" data-chapter="Finale" data-section="finale"></div>
+    </div>
 
     <a href="../../index.html" class="back-btn">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -446,58 +1137,174 @@
         Back to Portfolio
     </a>
 
-    <!-- Hero -->
-    <section class="parallax-section hero" data-parallax>
-        <div class="layer layer-stars" data-speed="0.2"></div>
-        <div class="layer layer-grid" data-speed="0.5"></div>
+    <!-- CHAPTER 1: THE BEGINNING -->
+    <section class="parallax-section hero" id="hero">
+        <div class="layer layer-stars-far" data-speed="0.1"></div>
+        <div class="layer layer-stars-mid" data-speed="0.2"></div>
+        <div class="layer layer-stars-close" data-speed="0.3"></div>
+        <div class="layer layer-nebula" data-speed="0.15"></div>
 
-        <div class="hero-content">
-            <span class="hero-badge">Parallax Experience</span>
-            <h1>Journey Through Depth</h1>
-            <p>Scroll to explore layered worlds with immersive parallax effects</p>
-        </div>
-
-        <div class="scroll-indicator">
-            <div class="mouse"></div>
-            <span>Scroll</span>
-        </div>
-    </section>
-
-    <!-- Mountains -->
-    <section class="parallax-section mountains" data-parallax>
-        <div class="layer layer-back" data-speed="0.3"></div>
-        <div class="layer layer-mid" data-speed="0.5"></div>
-        <div class="layer layer-front" data-speed="0.7"></div>
-
-        <div class="mountains-content">
-            <h2>Layered Landscapes</h2>
-            <p>Multiple depth layers create an illusion of 3D space as you scroll</p>
+        <div class="content">
+            <h1>The Journey</h1>
+            <p>A parallax adventure through worlds unknown</p>
+            <div class="scroll-cta">
+                <div class="mouse"></div>
+                <span>Scroll to begin</span>
+            </div>
         </div>
     </section>
 
-    <!-- Abstract -->
-    <section class="parallax-section abstract" data-parallax>
-        <div class="floating-shapes">
-            <div class="shape shape-1" data-speed="0.4"></div>
-            <div class="shape shape-2" data-speed="0.6"></div>
-            <div class="shape shape-3" data-speed="0.3"></div>
-        </div>
+    <!-- CHAPTER 2: THE DESCENT -->
+    <section class="parallax-section clouds" id="clouds">
+        <div class="layer layer-sun" data-speed="0.2"></div>
+        <div class="layer layer-clouds-back" data-speed="0.3"></div>
+        <div class="layer layer-clouds-mid" data-speed="0.5"></div>
+        <div class="layer layer-clouds-front" data-speed="0.7"></div>
 
-        <div class="abstract-content">
-            <h2>Abstract Motion</h2>
-            <p>Floating elements respond to scroll, creating dynamic compositions</p>
+        <div class="content">
+            <span class="chapter-label">Chapter 1</span>
+            <h2>Through the Clouds</h2>
+            <p>We descend from the heavens, passing through layers of cotton-white clouds. The sun warms our journey as
+                we break through to see the world below.</p>
         </div>
     </section>
 
-    <!-- Final -->
-    <section class="parallax-section final">
-        <div class="final-content">
-            <h2>The End of the Journey</h2>
-            <p>Thanks for scrolling through this parallax experience</p>
-            <a href="../../index.html">
-                Back to Portfolio
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
+    <!-- CHAPTER 3: THE MOUNTAINS -->
+    <section class="parallax-section mountains" id="mountains">
+        <div class="layer layer-mountain-far" data-speed="0.2"></div>
+        <div class="layer layer-mountain-mid" data-speed="0.4"></div>
+        <div class="layer layer-mountain-close" data-speed="0.6"></div>
+        <div class="layer layer-birds">
+            <span class="bird">🦅</span>
+            <span class="bird">🦅</span>
+            <span class="bird">🦅</span>
+        </div>
+
+        <div class="content">
+            <span class="chapter-label">Chapter 2</span>
+            <h2>Ancient Peaks</h2>
+            <p>Majestic mountains rise before us, their peaks touched by the last light of sunset. Eagles soar on
+                thermal currents, masters of this vertical world.</p>
+        </div>
+    </section>
+
+    <!-- CHAPTER 4: THE FOREST -->
+    <section class="parallax-section forest" id="forest">
+        <div class="layer layer-trees-far" data-speed="0.2"></div>
+        <div class="layer layer-trees-mid" data-speed="0.4"></div>
+        <div class="layer layer-trees-close" data-speed="0.6"></div>
+        <div class="layer layer-mist" data-speed="0.3"></div>
+        <div class="layer layer-fireflies">
+            <div class="firefly"></div>
+            <div class="firefly"></div>
+            <div class="firefly"></div>
+            <div class="firefly"></div>
+            <div class="firefly"></div>
+            <div class="firefly"></div>
+            <div class="firefly"></div>
+            <div class="firefly"></div>
+        </div>
+
+        <div class="content">
+            <span class="chapter-label">Chapter 3</span>
+            <h2>The Enchanted Forest</h2>
+            <p>We enter an ancient forest where fireflies dance in the mist. The trees whisper secrets of ages past,
+                their canopy hiding mysteries within shadows.</p>
+        </div>
+    </section>
+
+    <!-- CHAPTER 5: THE OCEAN -->
+    <section class="parallax-section ocean" id="ocean">
+        <div class="layer layer-waves-back" data-speed="0.2"></div>
+        <div class="layer layer-waves-mid" data-speed="0.4"></div>
+        <div class="layer layer-waves-front" data-speed="0.6"></div>
+        <div class="layer layer-fish">
+            <span class="fish">🐟</span>
+            <span class="fish">🐠</span>
+            <span class="fish">🐡</span>
+        </div>
+        <div class="layer layer-bubbles">
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+        </div>
+
+        <div class="content">
+            <span class="chapter-label">Chapter 4</span>
+            <h2>Beneath the Waves</h2>
+            <p>We dive into the vast ocean, where currents carry us through schools of shimmering fish. Bubbles rise
+                around us as we descend deeper into the blue.</p>
+        </div>
+    </section>
+
+    <!-- CHAPTER 6: THE DEEP -->
+    <section class="parallax-section deep" id="deep">
+        <div class="layer layer-bioluminescence">
+            <div class="glow-orb"></div>
+            <div class="glow-orb"></div>
+            <div class="glow-orb"></div>
+            <div class="glow-orb"></div>
+            <div class="glow-orb"></div>
+        </div>
+
+        <div class="content">
+            <span class="chapter-label">Chapter 5</span>
+            <h2>The Abyss</h2>
+            <p>In the deepest darkness, bioluminescent creatures pulse with ethereal light. Life finds a way even here,
+                in this realm of eternal night where pressure and mystery reign.</p>
+        </div>
+    </section>
+
+    <!-- CHAPTER 7: ABSTRACT DIMENSIONS -->
+    <section class="parallax-section abstract" id="abstract">
+        <div class="layer layer-grid" data-speed="0.3"></div>
+        <div class="layer layer-shapes">
+            <div class="abstract-shape" data-speed="0.4"></div>
+            <div class="abstract-shape" data-speed="0.5"></div>
+            <div class="abstract-shape" data-speed="0.3"></div>
+            <div class="abstract-shape" data-speed="0.6"></div>
+        </div>
+
+        <div class="content">
+            <span class="chapter-label">Chapter 6</span>
+            <h2>Beyond Reality</h2>
+            <p>We transcend the physical world and enter abstract dimensions. Shapes morph and flow, reality bends, and
+                the boundaries of perception dissolve into pure creativity.</p>
+        </div>
+    </section>
+
+    <!-- CHAPTER 8: THE COSMOS -->
+    <section class="parallax-section cosmos" id="cosmos">
+        <div class="layer layer-galaxy" data-speed="0.1"></div>
+        <div class="layer layer-planets">
+            <div class="planet planet-1" data-speed="0.3"></div>
+            <div class="planet planet-2" data-speed="0.5"></div>
+            <div class="planet planet-3" data-speed="0.4"></div>
+        </div>
+
+        <div class="content">
+            <span class="chapter-label">Chapter 7</span>
+            <h2>Among the Stars</h2>
+            <p>We float through the cosmos, watching galaxies spiral in slow motion. Planets orbit in their eternal
+                dance, each a world of infinite possibility waiting to be explored.</p>
+        </div>
+    </section>
+
+    <!-- CHAPTER 9: FINALE -->
+    <section class="parallax-section finale" id="finale">
+        <div class="content">
+            <span class="chapter-label">The End</span>
+            <h2>Journey Complete</h2>
+            <p>From stars to depths and back again, we've traveled through worlds of imagination. But every ending is a
+                new beginning.</p>
+            <a href="../../index.html" class="cta-btn">
+                Return Home
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
             </a>
         </div>
@@ -506,6 +1313,8 @@
     <script>
         // Progress Bar
         const progressBar = document.getElementById('progressBar');
+        const sections = document.querySelectorAll('.parallax-section');
+        const chapterDots = document.querySelectorAll('.chapter-dot');
 
         function updateProgress() {
             const scrollTop = window.scrollY;
@@ -514,6 +1323,34 @@
             progressBar.style.width = `${progress}%`;
         }
 
+        // Chapter Indicator
+        function updateChapterIndicator() {
+            const scrollTop = window.scrollY + window.innerHeight / 2;
+
+            sections.forEach((section, index) => {
+                const sectionTop = section.offsetTop;
+                const sectionBottom = sectionTop + section.offsetHeight;
+
+                if (scrollTop >= sectionTop && scrollTop < sectionBottom) {
+                    chapterDots.forEach(dot => dot.classList.remove('active'));
+                    if (chapterDots[index]) {
+                        chapterDots[index].classList.add('active');
+                    }
+                }
+            });
+        }
+
+        // Chapter dot click navigation
+        chapterDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const sectionId = dot.getAttribute('data-section');
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
         // Parallax Effect
         function updateParallax() {
             const scrolled = window.scrollY;
@@ -521,25 +1358,37 @@
             document.querySelectorAll('[data-speed]').forEach(layer => {
                 const speed = parseFloat(layer.getAttribute('data-speed'));
                 const section = layer.closest('.parallax-section');
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.offsetHeight;
 
-                // Only apply parallax when section is in view
-                if (scrolled + window.innerHeight > sectionTop && scrolled < sectionTop + sectionHeight) {
-                    const yPos = (scrolled - sectionTop) * speed;
-                    layer.style.transform = `translateY(${yPos}px)`;
+                if (section) {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.offsetHeight;
+
+                    // Only apply parallax when section is in view
+                    if (scrolled + window.innerHeight > sectionTop && scrolled < sectionTop + sectionHeight) {
+                        const yPos = (scrolled - sectionTop) * speed;
+                        layer.style.transform = `translateY(${yPos}px)`;
+                    }
                 }
             });
         }
 
-        // Scroll Event
+        // Scroll Event with throttling
+        let ticking = false;
         window.addEventListener('scroll', () => {
-            updateProgress();
-            requestAnimationFrame(updateParallax);
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    updateProgress();
+                    updateChapterIndicator();
+                    updateParallax();
+                    ticking = false;
+                });
+                ticking = true;
+            }
         });
 
         // Initial call
         updateProgress();
+        updateChapterIndicator();
         updateParallax();
     </script>
 </body>
