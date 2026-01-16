@@ -365,176 +365,495 @@
                 padding: 2rem;
             }
         }
+
+        /* Slash Menu */
+        .slash-menu {
+            position: absolute;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            padding: 4px 0;
+        }
+
+        .slash-menu.active {
+            display: flex;
+        }
+
+        .slash-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .slash-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .slash-item .icon {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: white;
+        }
+
+        .slash-item .info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slash-item .label {
+            font-weight: 500;
+        }
+
+        .slash-item .desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Gallery View */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 1rem;
+        }
+
+        .gallery-card {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .gallery-card:hover {
+            background: var(--bg-hover);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .gallery-cover {
+            height: 100px;
+            background: #e0e0e0;
+            object-fit: cover;
+        }
+
+        .gallery-content {
+            padding: 10px;
+        }
+
+        .gallery-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Confetti */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Add Content Block Animation */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .new-block {
+            animation: slideDown 0.3s ease forwards;
+        }
     </style>
 </head>
 
 <body>
     <div class="layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <span class="emoji">🎨</span>
-                <span class="title">Bob's Workspace</span>
-            </div>
-
-            <nav class="nav-section">
-                <div class="nav-section-title">Favorites</div>
-                <a href="#" class="nav-item active">
-                    <span class="emoji">📄</span>
-                    Design Philosophy
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="emoji">🚀</span>
-                    Projects
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="emoji">💡</span>
-                    Ideas
-                </a>
-            </nav>
-
-            <nav class="nav-section">
-                <div class="nav-section-title">Private</div>
-                <a href="#" class="nav-item">
-                    <span class="emoji">📝</span>
-                    Quick Notes
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="emoji">📚</span>
-                    Reading List
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="emoji">🎯</span>
-                    Goals
-                </a>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main">
-            <div class="page-icon">📄</div>
-            <h1 class="page-title">Design Philosophy</h1>
-            <p class="page-description">My approach to creating clean, meaningful digital experiences.</p>
-
-            <div class="block-callout">
-                <span class="emoji">💡</span>
-                <div class="content">
-                    <strong>Core principle:</strong> Good design is invisible. It should feel natural and intuitive,
-                    never getting in the way of the content.
+        < !-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header"><span class="emoji">🎨</span><span class="title">Bob's Workspace</span>
                 </div>
-            </div>
+                <nav class="nav-section">
+                    <div class="nav-section-title">Favorites</div><a href="#" class="nav-item active"><span
+                            class="emoji">📄</span>Design Philosophy </a><a href="#" class="nav-item"><span
+                            class="emoji">🚀</span>Projects </a><a href="#" class="nav-item"><span
+                            class="emoji">💡</span>Ideas </a>
+                </nav>
+                <nav class="nav-section">
+                    <div class="nav-section-title">Private</div><a href="#" class="nav-item"><span
+                            class="emoji">📝</span>Quick Notes </a><a href="#" class="nav-item"><span
+                            class="emoji">📚</span>Reading List </a><a href="#" class="nav-item"><span
+                            class="emoji">🎯</span>Goals </a>
+                </nav>
+            </aside>
+            < !-- Confetti Canvas --><canvas id="confetti-canvas"></canvas>
+                < !-- Main Content -->
+                    <main class="main" id="main-content">
+                        <div class="page-icon" id="page-icon" style="cursor: pointer; user-select: none;"
+                            title="Click for random emoji!">📄</div>
+                        <h1 class="page-title">Design Philosophy</h1>
+                        <p class="page-description">My approach to creating clean,
+                            meaningful digital experiences.</p>
+                        <div class="block-callout"><span class="emoji">💡</span>
+                            <div class="content"><strong>Core principle:</strong>Good design is invisible. It should
+                                feel natural and intuitive,
+                                never getting in the way of the content. </div>
+                        </div>
+                        <h2 class="block-heading">Guiding Principles</h2>
+                        <div class="block-toggle" onclick="this.classList.toggle('open')">
+                            <div class="toggle-header"><span class="toggle-icon"><svg viewBox="0 0 24 24"
+                                        fill="currentColor">
+                                        <path d="M9 18l6-6-6-6" />
+                                    </svg></span><strong>1. Clarity over cleverness</strong></div>
+                            <div class="toggle-content">
+                                <p class="block-text">Users should never have to think about how to use an interface. If
+                                    something requires explanation,
+                                    it's probably too complicated.</p>
+                            </div>
+                        </div>
+                        <div class="block-toggle" onclick="this.classList.toggle('open')">
+                            <div class="toggle-header"><span class="toggle-icon"><svg viewBox="0 0 24 24"
+                                        fill="currentColor">
+                                        <path d="M9 18l6-6-6-6" />
+                                    </svg></span><strong>2. Embrace whitespace</strong></div>
+                            <div class="toggle-content">
+                                <p class="block-text">Empty space isn't wasted space. It gives elements room to breathe
+                                    and helps
+                                    users focus on what matters.</p>
+                            </div>
+                        </div>
+                        <div class="block-toggle open" onclick="this.classList.toggle('open')">
+                            <div class="toggle-header"><span class="toggle-icon"><svg viewBox="0 0 24 24"
+                                        fill="currentColor">
+                                        <path d="M9 18l6-6-6-6" />
+                                    </svg></span><strong>3. Typography is everything</strong></div>
+                            <div class="toggle-content">
+                                <p class="block-text">90% of web design is typography. Choose fonts carefully,
+                                    set proper line heights,
+                                    and respect the vertical rhythm.</p>
+                            </div>
+                        </div>
+                        <div class="block-divider"></div>
+                        <h2 class="block-heading">Current Focus</h2>
+                        <div class="block-todo">
+                            <div class="todo-checkbox checked"
+                                onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                            </div><span class="todo-text completed">Master CSS Grid and Flexbox</span>
+                        </div>
+                        <div class="block-todo">
+                            <div class="todo-checkbox checked"
+                                onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                            </div><span class="todo-text completed">Learn animation principles</span>
+                        </div>
+                        <div class="block-todo">
+                            <div class="todo-checkbox"
+                                onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                            </div><span class="todo-text">Explore 3D web experiences</span>
+                        </div>
+                        <div class="block-todo">
+                            <div class="todo-checkbox"
+                                onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
+                            </div><span class="todo-text">Study micro-interactions</span>
+                        </div>
+                        <div class="block-divider"></div>
+                        <h2 class="block-heading">Favorite Quote</h2>
+                        <blockquote class="block-quote">"Design is not just what it looks like and feels like. Design is
+                            how it works."
 
-            <h2 class="block-heading">Guiding Principles</h2>
+                            <br>— Steve Jobs
+                        </blockquote>
+                        <div class="block-divider"></div>
+                        <h3 class="block-heading">Tech Stack</h3>
+                        <p class="block-text">I primarily work with <code>HTML</code>,
+                            <code>CSS</code>,
+                            and <code>JavaScript</code>. For frameworks,
+                            I prefer <code>React</code>or <code>Vue</code>depending on the project requirements.
+                        </p>
+                        <div class="block-code">
+                            <pre>const designPrinciples= {
+            clarity: true,
+                whitespace: 'generous',
+                typography: 'intentional',
+                animations: 'subtle'
+        }
 
-            <div class="block-toggle" onclick="this.classList.toggle('open')">
-                <div class="toggle-header">
-                    <span class="toggle-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </span>
-                    <strong>1. Clarity over cleverness</strong>
-                </div>
-                <div class="toggle-content">
-                    <p class="block-text">Users should never have to think about how to use an interface. If something
-                        requires explanation, it's probably too complicated.</p>
-                </div>
-            </div>
-
-            <div class="block-toggle" onclick="this.classList.toggle('open')">
-                <div class="toggle-header">
-                    <span class="toggle-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </span>
-                    <strong>2. Embrace whitespace</strong>
-                </div>
-                <div class="toggle-content">
-                    <p class="block-text">Empty space isn't wasted space. It gives elements room to breathe and helps
-                        users focus on what matters.</p>
-                </div>
-            </div>
-
-            <div class="block-toggle open" onclick="this.classList.toggle('open')">
-                <div class="toggle-header">
-                    <span class="toggle-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 18l6-6-6-6" />
-                        </svg>
-                    </span>
-                    <strong>3. Typography is everything</strong>
-                </div>
-                <div class="toggle-content">
-                    <p class="block-text">90% of web design is typography. Choose fonts carefully, set proper line
-                        heights, and respect the vertical rhythm.</p>
-                </div>
-            </div>
-
-            <div class="block-divider"></div>
-
-            <h2 class="block-heading">Current Focus</h2>
-
-            <div class="block-todo">
-                <div class="todo-checkbox checked"
-                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
-                </div>
-                <span class="todo-text completed">Master CSS Grid and Flexbox</span>
-            </div>
-            <div class="block-todo">
-                <div class="todo-checkbox checked"
-                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
-                </div>
-                <span class="todo-text completed">Learn animation principles</span>
-            </div>
-            <div class="block-todo">
-                <div class="todo-checkbox"
-                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
-                </div>
-                <span class="todo-text">Explore 3D web experiences</span>
-            </div>
-            <div class="block-todo">
-                <div class="todo-checkbox"
-                    onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('completed')">
-                </div>
-                <span class="todo-text">Study micro-interactions</span>
-            </div>
-
-            <div class="block-divider"></div>
-
-            <h2 class="block-heading">Favorite Quote</h2>
-
-            <blockquote class="block-quote">
-                "Design is not just what it looks like and feels like. Design is how it works."
-                <br>— Steve Jobs
-            </blockquote>
-
-            <div class="block-divider"></div>
-
-            <h3 class="block-heading">Tech Stack</h3>
-
-            <p class="block-text">
-                I primarily work with <code>HTML</code>, <code>CSS</code>, and <code>JavaScript</code>.
-                For frameworks, I prefer <code>React</code> or <code>Vue</code> depending on the project requirements.
-            </p>
-
-            <div class="block-code">
-                <pre>const designPrinciples = {
-  clarity: true,
-  whitespace: 'generous',
-  typography: 'intentional',
-  animations: 'subtle'
-};</pre>
-            </div>
-        </main>
+        ;
+        </pre>
+                        </div>
+                        <div class="block-divider"></div>
+                        <h2 class="block-heading">Project Gallery</h2>
+                        <div class="gallery-grid">
+                            <div class="gallery-card">
+                                <div class="gallery-cover" style="background: #ff7e67;"></div>
+                                <div class="gallery-content">
+                                    <div class="gallery-title"><span style="font-size: 14px;">🍎</span>Red Project</div>
+                                </div>
+                            </div>
+                            <div class="gallery-card">
+                                <div class="gallery-cover" style="background: #4b96e9;"></div>
+                                <div class="gallery-content">
+                                    <div class="gallery-title"><span style="font-size: 14px;">🚙</span>Blue Project
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="gallery-card">
+                                <div class="gallery-cover" style="background: #50bda4;"></div>
+                                <div class="gallery-content">
+                                    <div class="gallery-title"><span style="font-size: 14px;">🌲</span>Green Project
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="gallery-card">
+                                <div class="gallery-cover" style="background: #ffd644;"></div>
+                                <div class="gallery-content">
+                                    <div class="gallery-title"><span style="font-size: 14px;">⭐️</span>Gold Project
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        < !-- Slash Menu -->
+                            <div class="slash-menu" id="slash-menu">
+                                <div class="slash-item" onclick="insertBlock('text')">
+                                    <div class="icon">T</div>
+                                    <div class="info"><span class="label">Text</span><span class="desc">Just start
+                                            writing with plain text.</span></div>
+                                </div>
+                                <div class="slash-item" onclick="insertBlock('h1')">
+                                    <div class="icon">H1</div>
+                                    <div class="info"><span class="label">Heading 1</span><span class="desc">Big section
+                                            heading.</span></div>
+                                </div>
+                                <div class="slash-item" onclick="insertBlock('h2')">
+                                    <div class="icon">H2</div>
+                                    <div class="info"><span class="label">Heading 2</span><span class="desc">Medium
+                                            section heading.</span></div>
+                                </div>
+                                <div class="slash-item" onclick="insertBlock('callout')">
+                                    <div class="icon">💡</div>
+                                    <div class="info"><span class="label">Callout</span><span class="desc">Make writing
+                                            stand out.</span></div>
+                                </div>
+                            </div>
+                    </main>
     </div>
+    <script> // === INTERACTIVITY ===
 
-    <a href="../../index.html" class="back-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        // 1. Emoji Picker (Randomizer)
+        const emojis = ['📄',
+            '🎨',
+            '🚀',
+            '💡',
+            '📝',
+            '📚',
+            '🎯',
+            '✨',
+            '🔥',
+            '💻',
+            '🎮',
+            '🍕'];
+        const pageIcon = document.getElementById('page-icon');
+
+        pageIcon.addEventListener('click', () => {
+            const current = pageIcon.innerText;
+            let next = emojis[Math.floor(Math.random() * emojis.length)];
+
+            while (next === current) {
+                next = emojis[Math.floor(Math.random() * emojis.length)];
+            }
+
+            pageIcon.innerText = next;
+
+            // Small pop animation
+            pageIcon.style.transform = 'scale(1.2)';
+            setTimeout(() => pageIcon.style.transform = 'scale(1)', 150);
+        });
+
+        // 2. Slash Command
+        const slashMenu = document.getElementById('slash-menu');
+        const mainContent = document.getElementById('main-content');
+        let isSlashMenuOpen = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/') {
+
+                // If not typing in input/textarea (simple check for this demo)
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    toggleSlashMenu();
+                }
+            }
+
+            else if (e.key === 'Escape') {
+                hideSlashMenu();
+            }
+        });
+
+        // Hide menu on click outside
+        document.addEventListener('click', (e) => {
+            if (isSlashMenuOpen && !slashMenu.contains(e.target)) {
+                hideSlashMenu();
+            }
+        });
+
+        function toggleSlashMenu() {
+
+            // Position roughly near center or bottom of screen for demo, 
+            // in real app would be at cursor
+            if (isSlashMenuOpen) {
+                hideSlashMenu();
+                return;
+            }
+
+            // Center the menu for visibility in this demo
+            const rect = mainContent.getBoundingClientRect();
+            slashMenu.style.top = (window.scrollY + window.innerHeight / 2 - 150) + 'px';
+            slashMenu.style.left = (rect.left + rect.width / 2 - 150) + 'px';
+
+            slashMenu.classList.add('active');
+            isSlashMenuOpen = true;
+        }
+
+        function hideSlashMenu() {
+            slashMenu.classList.remove('active');
+            isSlashMenuOpen = false;
+        }
+
+        window.insertBlock = function (type) {
+            hideSlashMenu();
+
+            const div = document.createElement('div');
+            div.className = 'new-block';
+
+            let html = '';
+            if (type === 'text') html = '<p class="block-text" contenteditable="true">Type something...</p>';
+            if (type === 'h1') html = '<h1 class="block-heading" contenteditable="true">Heading 1</h1>';
+            if (type === 'h2') html = '<h2 class="block-heading" contenteditable="true">Heading 2</h2>';
+
+            if (type === 'callout') {
+                html = ` <div class="block-callout"><span class="emoji">👋</span><div class="content" contenteditable="true">New callout block</div></div>`;
+            }
+
+            div.innerHTML = html;
+
+            // Insert before the slash menu
+            mainContent.insertBefore(div, slashMenu);
+        }
+
+        // 3. Easter Egg: Party Mode (Confetti)
+        const title = document.querySelector('.page-title');
+        let clickCount = 0;
+        let clickTimer;
+
+        title.addEventListener('click', () => {
+            clickCount++;
+            clearTimeout(clickTimer);
+
+            // Visual feedback
+            title.style.transform = `scale($ {
+                        1 + clickCount * 0.02
+                    })`;
+
+            if (clickCount >= 5) {
+                fireConfetti();
+                clickCount = 0;
+                title.style.transform = 'scale(1)';
+            }
+
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+                title.style.transform = 'scale(1)';
+            }
+
+                , 1000);
+        });
+
+        // Simple Confetti Implementation
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let confetti = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function fireConfetti() {
+            for (let i = 0; i < 100; i++) {
+                confetti.push({
+
+                    x: window.innerWidth / 2,
+                    y: window.innerHeight / 2,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20 - 10,
+                    color: `hsl($ {
+                            Math.random() * 360
+                        }
+
+                        , 100%, 50%)`,
+                    size: Math.random() * 10 + 5,
+                    life: 100
+                });
+            }
+
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            if (confetti.length === 0) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            confetti.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.5; // Gravity
+                p.life--;
+
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                if (p.life <= 0) confetti.splice(index, 1);
+            });
+
+            requestAnimationFrame(animateConfetti);
+        }
+
+    </script><a href="../../index.html" class="back-btn"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Portfolio
-    </a>
+        </svg>Back to Portfolio </a>
 </body>
 
 </html>
