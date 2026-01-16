@@ -515,7 +515,10 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        init();
+        // Wait for Three.js and GSAP to load before initializing
+        window.onload = function () {
+            init();
+        };
     </script>
 </body>
 
