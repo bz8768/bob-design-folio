@@ -148,6 +148,16 @@
             opacity: 1;
         }
 
+        /* Remove space between ART and IN when collapsed */
+        .segment-in {
+            margin-left: 0.3em;
+            transition: margin-left 1.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .container.collapsed .segment-in {
+            margin-left: 0;
+        }
+
         /* Subtitle */
         .subtitle {
             font-size: clamp(0.7rem, 2vw, 1rem);
@@ -276,9 +286,8 @@
         <div class="text-container">
             <div class="main-text">
                 <!-- ARTIFICIAL INTELLIGENCE ↔ ARTIN EDUCATION -->
-                <span class="segment">ART</span><span class="collapse collapse-ificial">IFICIAL</span>
-                <span class="segment" style="margin-left: 0.3em;">IN</span><span
-                    class="collapse collapse-telligence">TELLIGENCE</span>
+                <span class="segment">ART</span><span class="collapse collapse-ificial">IFICIAL</span><span
+                    class="segment segment-in">IN</span><span class="collapse collapse-telligence">TELLIGENCE</span>
                 <span class="expand expand-edu">EDUCATION</span>
             </div>
 
