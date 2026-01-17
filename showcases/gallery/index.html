@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Gallery | Bob's Design Folio</title>
+    <meta name="description"
+        content="An interactive scrollable art gallery - upload and browse your artwork collection">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f14;
+            --bg-secondary: #1a1a22;
+            --bg-card: #22222e;
+            --bg-elevated: #2a2a38;
+            --accent-gold: #c9a962;
+            --accent-gold-dim: rgba(201, 169, 98, 0.3);
+            --text-primary: #f5f5f7;
+            --text-secondary: #a0a0a8;
+            --text-muted: #6a6a72;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 40px rgba(201, 169, 98, 0.15);
+            --frame-color: #5c4a2a;
+            --frame-inner: #3d3428;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            height: 100vh;
+        }
+
+        /* Main Gallery View */
+        .gallery-main {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: linear-gradient(135deg, #0f0f14 0%, #181820 50%, #0f0f14 100%);
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-4px);
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .gallery-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        /* Gallery Canvas Area */
+        .gallery-canvas {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient Background Effect */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-gold-dim) 0%, transparent 70%);
+            opacity: 0.4;
+            filter: blur(80px);
+            pointer-events: none;
+            transition: all 0.8s ease;
+        }
+
+        /* Artwork Container */
+        .artwork-container {
+            display: flex;
+            gap: 3rem;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .artwork-frame {
+            position: relative;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .artwork-frame:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .artwork-frame.active {
+            transform: scale(1.05);
+        }
+
+        /* Ornate Frame Styling */
+        .frame-outer {
+            padding: 20px;
+            background: linear-gradient(145deg, #6d5a35 0%, #4a3d24 50%, #5c4a2a 100%);
+            border-radius: 4px;
+            box-shadow:
+                var(--shadow-soft),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .frame-inner {
+            padding: 8px;
+            background: linear-gradient(145deg, #3d3428 0%, #2a2520 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .frame-mat {
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .artwork-image {
+            display: block;
+            max-width: 320px;
+            max-height: 400px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            background: #0a0a0a;
+        }
+
+        /* Decorative Corner Accents */
+        .frame-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--accent-gold);
+            opacity: 0.4;
+        }
+
+        .frame-corner.top-left {
+            top: 8px;
+            left: 8px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .frame-corner.top-right {
+            top: 8px;
+            right: 8px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .frame-corner.bottom-left {
+            bottom: 8px;
+            left: 8px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .frame-corner.bottom-right {
+            bottom: 8px;
+            right: 8px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* Artwork Label */
+        .artwork-label {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1.25rem;
+            background: var(--bg-elevated);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Navigation Controls */
+        .gallery-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-color: var(--accent-gold);
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .page-indicator {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .fullscreen-btn {
+            margin-left: 1rem;
+            background: transparent;
+        }
+
+        /* Sidebar */
+        .gallery-sidebar {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-title h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .add-artwork-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.9rem;
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-artwork-btn:hover {
+            background: #dbb972;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .add-artwork-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .sidebar-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Artwork List */
+        .artwork-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .artwork-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .artwork-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .artwork-list::-webkit-scrollbar-thumb {
+            background: var(--bg-elevated);
+            border-radius: 3px;
+        }
+
+        .artwork-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .artwork-item:hover {
+            background: var(--bg-elevated);
+            border-color: var(--accent-gold-dim);
+        }
+
+        .artwork-item.active {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 20px var(--accent-gold-dim);
+        }
+
+        .artwork-thumb {
+            width: 52px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 4px;
+            background: var(--bg-primary);
+        }
+
+        .artwork-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .artwork-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .artwork-meta {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .artwork-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 100, 100, 0.8);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .artwork-item:hover .artwork-remove {
+            opacity: 1;
+        }
+
+        .artwork-remove:hover {
+            background: rgba(255, 60, 60, 1);
+        }
+
+        /* Drag Handle */
+        .drag-handle {
+            color: var(--text-muted);
+            cursor: grab;
+            opacity: 0.4;
+        }
+
+        .artwork-item:hover .drag-handle {
+            opacity: 1;
+        }
+
+        /* Add Footer */
+        .sidebar-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .add-more-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: transparent;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-more-btn:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            max-width: 300px;
+        }
+
+        .empty-upload-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .empty-upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Hidden File Input */
+        #file-input {
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .artwork-frame {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-sidebar {
+                display: none;
+            }
+
+            .artwork-container {
+                gap: 1.5rem;
+            }
+
+            .frame-outer {
+                padding: 12px;
+            }
+
+            .artwork-image {
+                max-width: 250px;
+                max-height: 320px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Main Gallery Area -->
+        <main class="gallery-main">
+            <header class="gallery-header">
+                <a href="../../index.html" class="back-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                </a>
+                <h1 class="gallery-title">Art Gallery</h1>
+                <div class="header-actions"></div>
+            </header>
+
+            <div class="gallery-canvas" id="galleryCanvas">
+                <div class="ambient-glow" id="ambientGlow"></div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <h3>Your Gallery Awaits</h3>
+                    <p>Upload your first artwork to start building your collection</p>
+                    <button class="empty-upload-btn" onclick="document.getElementById('file-input').click()">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Upload Artwork
+                    </button>
+                </div>
+
+                <!-- Artwork Display -->
+                <div class="artwork-container" id="artworkContainer" style="display: none;"></div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="gallery-controls" id="galleryControls" style="display: none;">
+                <button class="nav-btn" id="btnFirst" title="First">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button class="nav-btn" id="btnPrev" title="Previous">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <span class="page-indicator" id="pageIndicator">1 / 1</span>
+                <button class="nav-btn" id="btnNext" title="Next">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+                <button class="nav-btn" id="btnLast" title="Last">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                </button>
+                <button class="nav-btn fullscreen-btn" id="btnFullscreen" title="Fullscreen">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                </button>
+            </div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="gallery-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <h3>Gallery Artworks</h3>
+                    <button class="add-artwork-btn" onclick="document.getElementById('file-input').click()">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add
+                    </button>
+                </div>
+                <p class="sidebar-hint">Upload images or drag & drop to add artworks to your gallery.</p>
+            </div>
+
+            <div class="artwork-list" id="artworkList"></div>
+
+            <div class="sidebar-footer">
+                <button class="add-more-btn" onclick="document.getElementById('file-input').click()">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add more artworks
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="file-input" accept="image/*" multiple />
+
+    <script>
+        // ========== GALLERY STATE ==========
+        let artworks = [];
+        let currentIndex = 0;
+        const STORAGE_KEY = 'bobGalleryArtworks';
+        const MAX_DISPLAY = 2; // Show 2 artworks at a time
+
+        // ========== DOM ELEMENTS ==========
+        const fileInput = document.getElementById('file-input');
+        const emptyState = document.getElementById('emptyState');
+        const artworkContainer = document.getElementById('artworkContainer');
+        const galleryControls = document.getElementById('galleryControls');
+        const artworkList = document.getElementById('artworkList');
+        const pageIndicator = document.getElementById('pageIndicator');
+        const ambientGlow = document.getElementById('ambientGlow');
+
+        // ========== INITIALIZATION ==========
+        function init() {
+            loadFromStorage();
+            setupEventListeners();
+            render();
+        }
+
+        function loadFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    artworks = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to load artworks:', e);
+                artworks = [];
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(artworks));
+            } catch (e) {
+                console.error('Failed to save artworks:', e);
+                // Handle quota exceeded - remove oldest items
+                if (e.name === 'QuotaExceededError') {
+                    if (artworks.length > 1) {
+                        artworks.shift();
+                        saveToStorage();
+                    }
+                }
+            }
+        }
+
+        // ========== EVENT LISTENERS ==========
+        function setupEventListeners() {
+            // File input
+            fileInput.addEventListener('change', handleFileUpload);
+
+            // Navigation buttons
+            document.getElementById('btnFirst').addEventListener('click', () => goTo(0));
+            document.getElementById('btnPrev').addEventListener('click', () => goTo(currentIndex - 1));
+            document.getElementById('btnNext').addEventListener('click', () => goTo(currentIndex + 1));
+            document.getElementById('btnLast').addEventListener('click', () => goTo(artworks.length - 1));
+            document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+
+            // Keyboard navigation
+            document.addEventListener('keydown', handleKeyboard);
+
+            // Drag & drop
+            const canvas = document.getElementById('galleryCanvas');
+            canvas.addEventListener('dragover', handleDragOver);
+            canvas.addEventListener('drop', handleDrop);
+        }
+
+        function handleKeyboard(e) {
+            if (e.key === 'ArrowLeft') goTo(currentIndex - 1);
+            if (e.key === 'ArrowRight') goTo(currentIndex + 1);
+            if (e.key === 'Home') goTo(0);
+            if (e.key === 'End') goTo(artworks.length - 1);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            processFiles(files);
+        }
+
+        // ========== FILE HANDLING ==========
+        function handleFileUpload(e) {
+            const files = Array.from(e.target.files);
+            processFiles(files);
+            e.target.value = ''; // Reset input
+        }
+
+        function processFiles(files) {
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const artwork = {
+                        id: Date.now() + Math.random().toString(36).substr(2, 9),
+                        name: file.name.replace(/\.[^/.]+$/, ''),
+                        data: e.target.result,
+                        addedAt: new Date().toISOString()
+                    };
+                    artworks.push(artwork);
+                    saveToStorage();
+                    render();
+                    // Navigate to the new artwork
+                    goTo(artworks.length - 1);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ========== NAVIGATION ==========
+        function goTo(index) {
+            if (artworks.length === 0) return;
+            currentIndex = Math.max(0, Math.min(index, artworks.length - 1));
+            renderMain();
+            updateSidebarActive();
+            updateControls();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // ========== RENDER ==========
+        function render() {
+            const hasArtworks = artworks.length > 0;
+
+            emptyState.style.display = hasArtworks ? 'none' : 'flex';
+            artworkContainer.style.display = hasArtworks ? 'flex' : 'none';
+            galleryControls.style.display = hasArtworks ? 'flex' : 'none';
+
+            if (hasArtworks) {
+                renderMain();
+                renderSidebar();
+                updateControls();
+            } else {
+                renderSidebar();
+            }
+        }
+
+        function renderMain() {
+            if (artworks.length === 0) return;
+
+            // Determine which artworks to show (current and next if available)
+            const displayArtworks = [];
+            displayArtworks.push(artworks[currentIndex]);
+            if (currentIndex + 1 < artworks.length) {
+                displayArtworks.push(artworks[currentIndex + 1]);
+            }
+
+            artworkContainer.innerHTML = displayArtworks.map((artwork, idx) => `
+                <div class="artwork-frame ${idx === 0 ? 'active' : ''}" data-id="${artwork.id}">
+                    <div class="frame-outer">
+                        <div class="frame-inner">
+                            <div class="frame-mat">
+                                <img src="${artwork.data}" alt="${artwork.name}" class="artwork-image" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="frame-corner top-left"></div>
+                    <div class="frame-corner top-right"></div>
+                    <div class="frame-corner bottom-left"></div>
+                    <div class="frame-corner bottom-right"></div>
+                    <div class="artwork-label">${artwork.name}</div>
+                </div>
+            `).join('');
+
+            // Update page indicator
+            pageIndicator.textContent = `${currentIndex + 1} / ${artworks.length}`;
+
+            // Move ambient glow
+            const mainFrame = artworkContainer.querySelector('.artwork-frame.active');
+            if (mainFrame) {
+                const rect = mainFrame.getBoundingClientRect();
+                const canvas = document.getElementById('galleryCanvas').getBoundingClientRect();
+                ambientGlow.style.left = (rect.left - canvas.left + rect.width / 2 - 300) + 'px';
+                ambientGlow.style.top = (rect.top - canvas.top + rect.height / 2 - 300) + 'px';
+            }
+        }
+
+        function renderSidebar() {
+            artworkList.innerHTML = artworks.map((artwork, idx) => `
+                <div class="artwork-item ${idx === currentIndex ? 'active' : ''}" data-index="${idx}">
+                    <svg class="drag-handle" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/>
+                        <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                        <circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>
+                    </svg>
+                    <img src="${artwork.data}" alt="${artwork.name}" class="artwork-thumb" />
+                    <div class="artwork-info">
+                        <div class="artwork-name">${artwork.name}</div>
+                        <div class="artwork-meta">${idx + 1} of gallery</div>
+                    </div>
+                    <button class="artwork-remove" onclick="removeArtwork('${artwork.id}', event)" title="Remove">×</button>
+                </div>
+            `).join('');
+
+            // Add click listeners
+            artworkList.querySelectorAll('.artwork-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (!e.target.closest('.artwork-remove')) {
+                        goTo(parseInt(item.dataset.index));
+                    }
+                });
+            });
+        }
+
+        function updateSidebarActive() {
+            artworkList.querySelectorAll('.artwork-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx === currentIndex);
+            });
+
+            // Scroll active item into view
+            const activeItem = artworkList.querySelector('.artwork-item.active');
+            if (activeItem) {
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function updateControls() {
+            document.getElementById('btnFirst').disabled = currentIndex === 0;
+            document.getElementById('btnPrev').disabled = currentIndex === 0;
+            document.getElementById('btnNext').disabled = currentIndex >= artworks.length - 1;
+            document.getElementById('btnLast').disabled = currentIndex >= artworks.length - 1;
+        }
+
+        // ========== REMOVE ARTWORK ==========
+        function removeArtwork(id, event) {
+            event.stopPropagation();
+            const idx = artworks.findIndex(a => a.id === id);
+            if (idx !== -1) {
+                artworks.splice(idx, 1);
+                saveToStorage();
+                if (currentIndex >= artworks.length) {
+                    currentIndex = Math.max(0, artworks.length - 1);
+                }
+                render();
+            }
+        }
+
+        // ========== START ==========
+        init();
+    </script>
+</body>
+
+</html>
